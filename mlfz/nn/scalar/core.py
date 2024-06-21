@@ -12,7 +12,7 @@ class Scalar:
 
     Attributes:
         value: The scalar value of the node.
-        incoming: A list of Edge instances.
+        prevs: A list of Edge instances.
     """
 
     def __init__(self, value: float, prevs=None):
@@ -69,8 +69,6 @@ class Scalar:
         for scalar in reversed(ordered_scalars):
             scalar._backward_step()
 
-    # adding two Scalars yields a third one, recording the
-    # operands as the previous Scalars
     def __add__(self, other):
         if not isinstance(other, Scalar):
             other = Scalar(other)
@@ -89,7 +87,6 @@ class Scalar:
     def __rsub__(self, other):
         return other + self.__neg__()
 
-    # similar to __add__
     def __mul__(self, other):
         if not isinstance(other, Scalar):
             other = Scalar(other)
@@ -129,7 +126,6 @@ class Scalar:
             ],
         )
 
-    # similar to __add__ and __mul__
     def __pow__(self, exponent):
         if not isinstance(exponent, Scalar):
             exponent = Scalar(exponent)
