@@ -9,6 +9,7 @@ def test_init():
 
     x = Tensor.from_random(*x_shape)
     assert x.shape == x_shape
+    assert x[0, 0] == x.value[0, 0]
 
     x_ones = Tensor.ones(*x_shape)
     assert (x_ones.value == x_ones_true).all()

@@ -64,6 +64,9 @@ class Tensor:
         for scalar in reversed(ordered_scalars):
             scalar._backward_step()
 
+    def __getitem__(self, index):
+        return self.value[index]
+
     def __add__(self, other):
         if not isinstance(other, Tensor):
             other = Tensor(other)
