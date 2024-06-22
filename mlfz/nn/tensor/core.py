@@ -6,6 +6,10 @@ Edge = namedtuple("Edge", ["prev", "local_grad"])
 
 
 class Tensor:
+    # the __array_priority__ makes sure that when used in combination
+    # with NumPy arrays, the Tensor operations take precedence
+    __array_priority__ = 1.0
+
     def __init__(self, value: np.ndarray, prevs=None):
         self.value = value
         self.prevs = prevs

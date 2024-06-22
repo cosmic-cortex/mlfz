@@ -44,7 +44,7 @@ def test_add():
     z2 = x + y_numpy
     z3 = y_numpy + x
     assert (z2.value == x.value + y_numpy).all()
-    # assert (z3.value == y_numpy + x.value).all()
+    assert (z3.value == y_numpy + x.value).all()
 
     # test adding floats
     y_float = 4.32
