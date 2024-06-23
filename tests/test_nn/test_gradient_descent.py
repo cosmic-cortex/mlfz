@@ -1,6 +1,6 @@
 from mlfz.nn import Model
 from mlfz.nn.scalar import Scalar
-from mlfz.nn.scalar.optimizer import GradientDescent
+from mlfz.nn.optimizer import GradientDescent
 from mlfz.nn.scalar.loss import mean_squared_error
 
 
