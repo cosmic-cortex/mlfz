@@ -33,7 +33,9 @@ def exp(x: Tensor):
 
 
 def log(x: Tensor):
-    return Tensor(value=np.log(x.value), prevs=[Edge(prev=x, local_grad=1 / np.abs(x))])
+    return Tensor(
+        value=np.log(x.value), prevs=[Edge(prev=x, local_grad=1 / np.abs(x.value))]
+    )
 
 
 def sin(x: Tensor):
