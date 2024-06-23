@@ -20,7 +20,7 @@ class Tensor:
 
     def _backward_step(self):
         for prev, local_grad in self.prevs:
-            prev.backwards_grad += local_grad * self.backwards_grad
+            prev.backwards_grad += self.backwards_grad @ local_grad
 
     def _get_graph(self, zero_grad=False):
         """

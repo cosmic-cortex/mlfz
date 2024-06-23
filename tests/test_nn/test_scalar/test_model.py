@@ -1,4 +1,5 @@
-from mlfz.nn.scalar import Scalar, Model
+from mlfz.nn.scalar import Scalar
+from mlfz.nn import Model
 
 
 class LinearRegression(Model):

@@ -1,11 +1,10 @@
 from typing import List, Callable
 from .core import Scalar
-from .model import Model
 from .loss import mean_squared_error
 
 
 class GradientDescent:
-    def __init__(self, model: Model, loss: Callable):
+    def __init__(self, model, loss: Callable):
         self.model = model
         self.loss = loss
 
