@@ -35,68 +35,108 @@ def test_init():
 
 
 def test_add():
-    x = Tensor.from_random(5, 8)
-    y_tensor = Tensor.from_random(5, 8)
-    z1 = x + y_tensor
-    assert (z1.value == x.value + y_tensor.value).all()
+    x = Tensor(np.array([[1, 2], [3, 4], [5, 6]]))
 
-    # test adding NumPy arrays
-    y_numpy = np.random.rand(5, 8)
-    z2 = x + y_numpy
-    z3 = y_numpy + x
-    assert (z2.value == x.value + y_numpy).all()
-    assert (z3.value == y_numpy + x.value).all()
+    # scalar case
+    y1 = Tensor(2) + x
+    y1_left = x + Tensor(2)
+    assert (y1.value == 2 + x.value).all()
+    assert (y1_left.value == x.value + 2).all()
 
-    # test adding floats
-    y_float = 4.32
-    z4 = x + y_float
-    z5 = y_float + x
-    assert (z4.value == x.value + y_float).all()
-    assert (z5.value == y_float + x.value).all()
+    # tensor case
+    t_1d_col = Tensor(np.array([[1], [2], [3]]))
+    t_1d_row = Tensor(np.array([1, 2]))
+    t_2d = Tensor(np.array([[1, 2], [3, 4], [5, 6]]))
+    y2 = t_1d_col + x
+    y2_left = x + t_1d_col
+    y3 = x + t_1d_row
+    y3_left = t_1d_row + x
+    y4 = t_2d + x
+    y4_left = x + t_2d
+    assert (
+        y2.value == np.array([[1 + 1, 2 + 1], [3 + 2, 4 + 2], [5 + 3, 6 + 3]])
+    ).all()
+    assert (
+        y2_left.value == np.array([[1 + 1, 2 + 1], [3 + 2, 4 + 2], [5 + 3, 6 + 3]])
+    ).all()
+    assert (
+        y3.value == np.array([[1 + 1, 2 + 2], [3 + 1, 4 + 2], [5 + 1, 6 + 2]])
+    ).all()
+    assert (
+        y3_left.value == np.array([[1 + 1, 2 + 2], [3 + 1, 4 + 2], [5 + 1, 6 + 2]])
+    ).all()
+    assert (
+        y4.value == np.array([[1 + 1, 2 + 2], [3 + 3, 4 + 4], [5 + 5, 6 + 6]])
+    ).all()
+    assert (
+        y4_left.value == np.array([[1 + 1, 2 + 2], [3 + 3, 4 + 4], [5 + 5, 6 + 6]])
+    ).all()
 
 
 def test_mul():
-    x = Tensor.ones(3, 2)
+    x = Tensor(np.array([[1, 2], [3, 4], [5, 6]]))
 
     # scalar case
     y1 = Tensor(2) * x
-    y2 = x * Tensor(2)
+    y1_left = x * Tensor(2)
     assert (y1.value == 2 * x.value).all()
-    assert (y2.value == x.value * 2).all()
+    assert (y1_left.value == x.value * 2).all()
 
     # tensor case
     t_1d_col = Tensor(np.array([[1], [2], [3]]))
     t_1d_row = Tensor(np.array([1, 2]))
     t_2d = Tensor(np.array([[1, 2], [3, 4], [5, 6]]))
-    y3 = t_1d_col * x
-    y4 = x * t_1d_row
-    y5 = t_2d * x
-    y6 = x * t_2d
-    assert (y3.value == np.array([[1, 1], [2, 2], [3, 3]])).all()
-    assert (y4.value == np.array([[1, 2], [1, 2], [1, 2]])).all()
-    assert (y5.value == np.array([[1, 2], [3, 4], [5, 6]])).all()
-    assert (y6.value == np.array([[1, 2], [3, 4], [5, 6]])).all()
+    y2 = t_1d_col * x
+    y2_left = x * t_1d_col
+    y3 = x * t_1d_row
+    y3_left = t_1d_row * x
+    y4 = t_2d * x
+    y4_left = x * t_2d
+    assert (
+        y2.value == np.array([[1 * 1, 2 * 1], [3 * 2, 4 * 2], [5 * 3, 6 * 3]])
+    ).all()
+    assert (
+        y2_left.value == np.array([[1 * 1, 2 * 1], [3 * 2, 4 * 2], [5 * 3, 6 * 3]])
+    ).all()
+    assert (
+        y3.value == np.array([[1 * 1, 2 * 2], [3 * 1, 4 * 2], [5 * 1, 6 * 2]])
+    ).all()
+    assert (
+        y3_left.value == np.array([[1 * 1, 2 * 2], [3 * 1, 4 * 2], [5 * 1, 6 * 2]])
+    ).all()
+    assert (
+        y4.value == np.array([[1 * 1, 2 * 2], [3 * 3, 4 * 4], [5 * 5, 6 * 6]])
+    ).all()
+    assert (
+        y4_left.value == np.array([[1 * 1, 2 * 2], [3 * 3, 4 * 4], [5 * 5, 6 * 6]])
+    ).all()
 
 
 def test_div():
-    x = Tensor.ones(3, 2)
+    x = Tensor(np.array([[1, 2], [3, 4], [5, 6]]))
 
     # scalar case
-    y1 = Tensor(2) / x
-    y2 = x / Tensor(2)
-    assert (y1.value == 2 / x.value).all()
-    assert (y2.value == x.value / 2).all()
+    y1 = x / Tensor(2)
+    y1_left = Tensor(2) / x
+    assert (y1.value == x.value / 2).all()
+    assert (y1_left.value == 2 / x.value).all()
 
     # tensor case
     t_1d_col = Tensor(np.array([[1], [2], [3]]))
     t_1d_row = Tensor(np.array([1, 2]))
     t_2d = Tensor(np.array([[1, 2], [3, 4], [5, 6]]))
-    y3 = x / t_1d_col
-    y4 = x / t_1d_row
-    y5 = x / t_2d
-    assert (y3.value == np.array([[1, 1], [1 / 2, 1 / 2], [1 / 3, 1 / 3]])).all()
-    assert (y4.value == np.array([[1, 1 / 2], [1, 1 / 2], [1, 1 / 2]])).all()
-    assert (y5.value == np.array([[1, 1 / 2], [1 / 3, 1 / 4], [1 / 5, 1 / 6]])).all()
+    y2 = x / t_1d_col
+    y3 = x / t_1d_row
+    y4 = x / t_2d
+    assert (
+        y2.value == np.array([[1 / 1, 2 / 1], [3 / 2, 4 / 2], [5 / 3, 6 / 3]])
+    ).all()
+    assert (
+        y3.value == np.array([[1 / 1, 2 / 2], [3 / 1, 4 / 2], [5 / 1, 6 / 2]])
+    ).all()
+    assert (
+        y4.value == np.array([[1 / 1, 2 / 2], [3 / 3, 4 / 4], [5 / 5, 6 / 6]])
+    ).all()
 
 
 def test_pow():
