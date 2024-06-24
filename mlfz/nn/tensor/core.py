@@ -18,6 +18,9 @@ class Tensor:
     def __repr__(self):
         return self.value.__repr__().replace("array", "Tensor")
 
+    def __len__(self):
+        return len(self.value)
+
     def _backward_step(self):
         for prev, local_grad in self.prevs:
             prev.backwards_grad += np.dot(self.backwards_grad, local_grad)
@@ -115,6 +118,25 @@ class Tensor:
             prevs=[
                 Edge(prev=self, local_grad=other.value.T),
                 Edge(prev=other, local_grad=self.value.T),
+            ],
+        )
+
+    def __pow__(self, exponent):
+        if not isinstance(exponent, Tensor):
+            exponent = Tensor(np.array(exponent))
+
+        return Tensor(
+            value=self.value**exponent.value,
+            prevs=[
+                Edge(
+                    prev=self,
+                    local_grad=exponent.value * (self.value ** (exponent.value - 1)),
+                ),
+                Edge(
+                    prev=exponent,
+                    local_grad=np.log(np.abs(self.value))
+                    * (self.value**exponent.value),
+                ),
             ],
         )
 
