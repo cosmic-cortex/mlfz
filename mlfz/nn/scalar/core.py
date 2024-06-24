@@ -118,13 +118,7 @@ class Scalar:
         if not isinstance(other, Scalar):
             other = Scalar(other)
 
-        return Scalar(
-            value=other.value / self.value,
-            prevs=[
-                Edge(other, 1 / self.value),
-                Edge(self, -other.value / self.value**2),
-            ],
-        )
+        return other / self
 
     def __pow__(self, exponent):
         if not isinstance(exponent, Scalar):

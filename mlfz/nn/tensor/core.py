@@ -109,6 +109,24 @@ class Tensor:
     def __neg__(self):
         return (-1) * self
 
+    def __truediv__(self, other):
+        if not isinstance(other, Tensor):
+            other = Tensor(np.array(other))
+
+        return Tensor(
+            value=self.value / other.value,
+            prevs=[
+                Edge(prev=self, local_grad=1 / self.value),
+                Edge(prev=other, local_grad=-other.value / self.value**2),
+            ],
+        )
+
+    def __rtruediv__(self, other):
+        if not isinstance(other, Tensor):
+            other = Tensor(np.array(other))
+
+        return other / self
+
     def __matmul__(self, other):
         if not isinstance(other, Tensor):
             other = Tensor(other)

@@ -55,7 +55,37 @@ def test_add():
     assert (z5.value == y_float + x.value).all()
 
 
-def test_scalar_mul():
-    x = Tensor.ones(5, 4)
-    y = 2 * x
-    print(y)
+def test_mul():
+    x = Tensor.ones(3, 2)
+
+    # scalar case
+    y1 = Tensor(2) * x
+    y2 = x * Tensor(2)
+    assert (y1.value == 2 * x.value).all()
+    assert (y2.value == x.value * 2).all()
+
+    # tensor case
+    t_1d_col = Tensor(np.array([[1], [2], [3]]))
+    t_1d_row = Tensor(np.array([1, 2]))
+    t_2d = Tensor(np.array([[1, 2], [3, 4], [5, 6]]))
+    y3 = t_1d_col * x
+    y4 = x * t_1d_row
+    y5 = t_2d * x
+    y6 = x * t_2d
+    assert (y3.value == np.array([[1, 1], [2, 2], [3, 3]])).all()
+    assert (y4.value == np.array([[1, 2], [1, 2], [1, 2]])).all()
+    assert (y5.value == np.array([[1, 2], [3, 4], [5, 6]])).all()
+    assert (y6.value == np.array([[1, 2], [3, 4], [5, 6]])).all()
+
+
+def test_div():
+    pass
+
+
+def test_pow():
+    x = 2 * Tensor.ones(5, 2)
+    y1 = x**2
+    assert (y1.value == 4).all()
+
+    y2 = x ** (2 * Tensor.ones(5, 2))
+    assert (y2.value == 4).all()
