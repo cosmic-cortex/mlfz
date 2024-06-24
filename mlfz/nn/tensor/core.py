@@ -158,6 +158,12 @@ class Tensor:
             ],
         )
 
+    def __rpow__(self, other):
+        if not isinstance(other, Tensor):
+            other = Tensor(np.array(other))
+
+        return other**self
+
     def T(self):
         return Tensor(
             value=self.value.T,

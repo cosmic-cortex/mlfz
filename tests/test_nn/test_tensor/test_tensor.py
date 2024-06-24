@@ -79,13 +79,42 @@ def test_mul():
 
 
 def test_div():
-    pass
+    x = Tensor.ones(3, 2)
+
+    # scalar case
+    y1 = Tensor(2) / x
+    y2 = x / Tensor(2)
+    assert (y1.value == 2 / x.value).all()
+    assert (y2.value == x.value / 2).all()
+
+    # tensor case
+    t_1d_col = Tensor(np.array([[1], [2], [3]]))
+    t_1d_row = Tensor(np.array([1, 2]))
+    t_2d = Tensor(np.array([[1, 2], [3, 4], [5, 6]]))
+    y3 = x / t_1d_col
+    y4 = x / t_1d_row
+    y5 = x / t_2d
+    assert (y3.value == np.array([[1, 1], [1 / 2, 1 / 2], [1 / 3, 1 / 3]])).all()
+    assert (y4.value == np.array([[1, 1 / 2], [1, 1 / 2], [1, 1 / 2]])).all()
+    assert (y5.value == np.array([[1, 1 / 2], [1 / 3, 1 / 4], [1 / 5, 1 / 6]])).all()
 
 
 def test_pow():
-    x = 2 * Tensor.ones(5, 2)
-    y1 = x**2
-    assert (y1.value == 4).all()
+    x = Tensor(np.array([[1, 2], [3, 4], [5, 6]]))
 
-    y2 = x ** (2 * Tensor.ones(5, 2))
-    assert (y2.value == 4).all()
+    # scalar case
+    y1 = x**2
+    y2 = 2**x
+    assert (y1.value == np.array([[1, 2**2], [3**2, 4**2], [5**2, 6**2]])).all()
+    assert (y2.value == np.array([[2**1, 2**2], [2**3, 2**4], [2**5, 2**6]])).all()
+
+    # tensor case
+    t_1d_col = Tensor(np.array([[1], [2], [3]]))
+    t_1d_row = Tensor(np.array([1, 2]))
+    t_2d = Tensor(np.array([[1, 2], [3, 4], [5, 6]]))
+    y3 = x**t_1d_col
+    y4 = x**t_1d_row
+    y5 = x**t_2d
+    assert (y3.value == np.array([[1**1, 2**1], [3**2, 4**2], [5**3, 6**3]])).all()
+    assert (y4.value == np.array([[1**1, 2**2], [3**1, 4**2], [5**1, 6**2]])).all()
+    assert (y5.value == np.array([[1**1, 2**2], [3**3, 4**4], [5**5, 6**6]])).all()
