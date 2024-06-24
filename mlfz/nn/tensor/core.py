@@ -20,7 +20,7 @@ class Tensor:
 
     def _backward_step(self):
         for prev, local_grad in self.prevs:
-            prev.backwards_grad += self.backwards_grad @ local_grad
+            prev.backwards_grad += np.dot(self.backwards_grad, local_grad)
 
     def _get_graph(self, zero_grad=False):
         """
@@ -57,12 +57,12 @@ class Tensor:
         self.value -= lr * self.backwards_grad
 
     def backward(self):
-        ordered_scalars = self._get_graph(zero_grad=True)
+        ordered_tensors = self._get_graph(zero_grad=True)
 
         self.backwards_grad = 1
 
-        for scalar in reversed(ordered_scalars):
-            scalar._backward_step()
+        for tensor in reversed(ordered_tensors):
+            tensor._backward_step()
 
     def __getitem__(self, index):
         return self.value[index]

@@ -56,4 +56,6 @@ def test_add():
 
 
 def test_scalar_mul():
-    pass
+    x = Tensor.ones(5, 4)
+    y = 2 * x
+    print(y)
