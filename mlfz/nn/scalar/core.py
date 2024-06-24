@@ -119,7 +119,7 @@ class Scalar:
             other = Scalar(other)
 
         return Scalar(
-            value=self.value / other.value,
+            value=other.value / self.value,
             prevs=[
                 Edge(other, 1 / self.value),
                 Edge(self, -other.value / self.value**2),
