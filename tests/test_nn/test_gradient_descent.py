@@ -1,7 +1,5 @@
 from mlfz.nn import Model
-from mlfz.nn.scalar import Scalar
-from mlfz.nn.optimizer import GradientDescent
-from mlfz.nn.scalar.loss import mean_squared_error
+from mlfz.nn.scalar import Scalar, GradientDescent, mean_squared_error
 
 
 def test_optimizer():
