@@ -16,7 +16,7 @@ def mean_squared_error(preds: Tensor, ys: Tensor) -> Tensor:
     """
     n_samples = len(preds)
 
-    pass
+    return (Tensor.ones(1, n_samples) / n_samples) @ (preds - ys) ** 2
 
 
 def binary_cross_entropy(preds: Tensor, ys: Tensor) -> Tensor:
