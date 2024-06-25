@@ -12,7 +12,7 @@ class Tensor:
 
     def __init__(self, value: np.ndarray, prevs=None):
         self.value = value
-        self.prevs = prevs
+        self.prevs = prevs if prevs is not None else []
         self.backwards_grad = np.zeros_like(value)
 
     def __repr__(self):
