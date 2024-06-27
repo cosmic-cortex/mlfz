@@ -1,5 +1,5 @@
 import numpy as np
-from .core import Tensor, Edge
+from .core import Tensor, Edge, _pointwise
 
 
 import numpy as np
@@ -28,44 +28,50 @@ def _tanh_prime(x: np.ndarray):
 
 def exp(x: Tensor):
     return Tensor(
-        value=np.exp(x.value), prevs=[Edge(prev=x, local_grad=np.exp(x.value))]
+        value=np.exp(x.value),
+        prevs=[Edge(prev=x, local_grad=np.exp(x.value), backward_fn=_pointwise)],
     )
 
 
 def log(x: Tensor):
     return Tensor(
-        value=np.log(x.value), prevs=[Edge(prev=x, local_grad=1 / np.abs(x.value))]
+        value=np.log(x.value),
+        prevs=[Edge(prev=x, local_grad=1 / np.abs(x.value), backward_fn=_pointwise)],
     )
 
 
 def sin(x: Tensor):
     return Tensor(
-        value=np.sin(x.value), prevs=[Edge(prev=x, local_grad=np.cos(x.value))]
+        value=np.sin(x.value),
+        prevs=[Edge(prev=x, local_grad=np.cos(x.value), backward_fn=_pointwise)],
     )
 
 
 def cos(x: Tensor):
     return Tensor(
-        value=np.cos(x.value), prevs=[Edge(prev=x, local_grad=-np.sin(x.value))]
+        value=np.cos(x.value),
+        prevs=[Edge(prev=x, local_grad=-np.sin(x.value), backward_fn=_pointwise)],
     )
 
 
 def sigmoid(x: Tensor):
     return Tensor(
         value=_sigmoid(x.value),
-        prevs=[Edge(prev=x, local_grad=_sigmoid_prime(x.value))],
+        prevs=[
+            Edge(prev=x, local_grad=_sigmoid_prime(x.value), backward_fn=_pointwise)
+        ],
     )
 
 
 def relu(x: Tensor):
     return Tensor(
         value=_relu(x.value),
-        prevs=[Edge(prev=x, local_grad=_relu_prime(x.value))],
+        prevs=[Edge(prev=x, local_grad=_relu_prime(x.value), backward_fn=_pointwise)],
     )
 
 
 def tanh(x: Tensor):
     return Tensor(
         value=np.tanh(x.value),
-        prevs=[Edge(prev=x, local_grad=_tanh_prime(x.value))],
+        prevs=[Edge(prev=x, local_grad=_tanh_prime(x.value), backward_fn=_pointwise)],
     )

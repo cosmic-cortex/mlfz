@@ -1,5 +1,7 @@
 import numpy as np
 from collections import namedtuple
+from numbers import Number
+from typing import List
 
 
 Edge = namedtuple("Edge", ["prev", "local_grad", "backward_fn"])
@@ -41,9 +43,9 @@ class Tensor:
     def __init__(
         self,
         value: np.ndarray,
-        prevs=None,
+        prevs: List = None,
     ):
-        self.value = value
+        self.value = np.array(value)
         self.prevs = prevs if prevs is not None else []
         self.backwards_grad = np.zeros_like(value)
 
@@ -114,7 +116,9 @@ class Tensor:
             prevs=[
                 Edge(prev=self, local_grad=np.ones_like(self), backward_fn=_pointwise),
                 Edge(
-                    prev=other, local_grad=np.ones_like(other), backward_fn=_pointwise
+                    prev=other,
+                    local_grad=np.ones_like(other),
+                    backward_fn=_pointwise,
                 ),
             ],
         )
