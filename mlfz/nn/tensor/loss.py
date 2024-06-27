@@ -1,4 +1,3 @@
-import math
 from .core import Tensor
 from .functional import log
 

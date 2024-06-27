@@ -2,7 +2,35 @@ import numpy as np
 from collections import namedtuple
 
 
-Edge = namedtuple("Edge", ["prev", "local_grad"])
+Edge = namedtuple("Edge", ["prev", "local_grad", "backward_fn"])
+
+
+def _pointwise(backwards_grad, local_grad):
+    """
+    Accumulation of the backwards gradient via pointwise multiplication.
+    """
+    return backwards_grad * local_grad
+
+
+def _matmul_left(backwards_grad, local_grad):
+    """
+    Accumulation of the backwards gradient via matrix multiplication.
+    """
+    return np.dot(backwards_grad, local_grad)
+
+
+def _matmul_right(backwards_grad, local_grad):
+    """
+    Accumulation of the backwards gradient via matrix multiplication.
+    """
+    return np.dot(local_grad, backwards_grad)
+
+
+def _transpose(backwards_grad, local_grad):
+    """
+    Transposing the backwards gradient.
+    """
+    return backwards_grad.T
 
 
 class Tensor:
@@ -10,7 +38,11 @@ class Tensor:
     # with NumPy arrays, the Tensor operations take precedence
     __array_priority__ = 1.0
 
-    def __init__(self, value: np.ndarray, prevs=None):
+    def __init__(
+        self,
+        value: np.ndarray,
+        prevs=None,
+    ):
         self.value = value
         self.prevs = prevs if prevs is not None else []
         self.backwards_grad = np.zeros_like(value)
@@ -22,8 +54,8 @@ class Tensor:
         return len(self.value)
 
     def _backward_step(self):
-        for prev, local_grad in self.prevs:
-            prev.backwards_grad += np.dot(self.backwards_grad, local_grad)
+        for prev, local_grad, backward_fn in self.prevs:
+            prev.backwards_grad += backward_fn(self.backwards_grad, local_grad)
 
     def _get_graph(self, zero_grad=False):
         """
@@ -44,7 +76,7 @@ class Tensor:
                 if zero_grad:
                     x.backwards_grad = 0
 
-                for prev, _ in x.prevs:
+                for prev, _, _ in x.prevs:
                     traverse_graph(prev)
 
                 ordered_tensors.append(x)
@@ -59,8 +91,8 @@ class Tensor:
     def gradient_update(self):
         self.value -= lr * self.backwards_grad
 
-    def backward(self):
-        ordered_tensors = self._get_graph(zero_grad=True)
+    def backward(self, zero_grad=True):
+        ordered_tensors = self._get_graph(zero_grad=zero_grad)
 
         self.backwards_grad = 1
 
@@ -71,14 +103,19 @@ class Tensor:
         return self.value[index]
 
     def __add__(self, other):
+        """
+        Pointwise addition of tensors.
+        """
         if not isinstance(other, Tensor):
             other = Tensor(other)
 
         return Tensor(
             value=self.value + other.value,
             prevs=[
-                Edge(prev=self, local_grad=np.ones_like(self)),
-                Edge(prev=other, local_grad=np.ones_like(other)),
+                Edge(prev=self, local_grad=np.ones_like(self), backward_fn=_pointwise),
+                Edge(
+                    prev=other, local_grad=np.ones_like(other), backward_fn=_pointwise
+                ),
             ],
         )
 
@@ -92,14 +129,17 @@ class Tensor:
         return other + self.__neg__()
 
     def __mul__(self, other):
+        """
+        Pointwise multiplication of tensors.
+        """
         if not isinstance(other, Tensor):
             other = Tensor(np.array(other))
 
         return Tensor(
             value=self.value * other.value,
             prevs=[
-                Edge(prev=self, local_grad=other.value),
-                Edge(prev=other, local_grad=self.value),
+                Edge(prev=self, local_grad=other.value, backward_fn=_pointwise),
+                Edge(prev=other, local_grad=self.value, backward_fn=_pointwise),
             ],
         )
 
@@ -110,14 +150,21 @@ class Tensor:
         return (-1) * self
 
     def __truediv__(self, other):
+        """
+        Pointwise division of tensors.
+        """
         if not isinstance(other, Tensor):
             other = Tensor(np.array(other))
 
         return Tensor(
             value=self.value / other.value,
             prevs=[
-                Edge(prev=self, local_grad=1 / self.value),
-                Edge(prev=other, local_grad=-other.value / self.value**2),
+                Edge(prev=self, local_grad=1 / self.value, backward_fn=_pointwise),
+                Edge(
+                    prev=other,
+                    local_grad=-other.value / self.value**2,
+                    backward_fn=_pointwise,
+                ),
             ],
         )
 
@@ -128,18 +175,24 @@ class Tensor:
         return other / self
 
     def __matmul__(self, other):
+        """
+        Multiplication of tensors.
+        """
         if not isinstance(other, Tensor):
             other = Tensor(other)
 
         return Tensor(
             value=self.value @ other.value,
             prevs=[
-                Edge(prev=self, local_grad=other.value.T),
-                Edge(prev=other, local_grad=self.value.T),
+                Edge(prev=self, local_grad=other.value.T, backward_fn=_matmul_left),
+                Edge(prev=other, local_grad=self.value.T, backward_fn=_matmul_right),
             ],
         )
 
     def __pow__(self, exponent):
+        """
+        Pointwise exponentiation of tensors.
+        """
         if not isinstance(exponent, Tensor):
             exponent = Tensor(np.array(exponent))
 
@@ -149,11 +202,13 @@ class Tensor:
                 Edge(
                     prev=self,
                     local_grad=exponent.value * (self.value ** (exponent.value - 1)),
+                    backward_fn=_pointwise,
                 ),
                 Edge(
                     prev=exponent,
                     local_grad=np.log(np.abs(self.value))
                     * (self.value**exponent.value),
+                    backward_fn=_pointwise,
                 ),
             ],
         )
@@ -165,9 +220,18 @@ class Tensor:
         return other**self
 
     def T(self):
+        """
+        Transpose of tensors.
+        """
         return Tensor(
             value=self.value.T,
-            prevs=[Edge(prev=self, local_grad=np.ones_like(self.value.T))],
+            prevs=[
+                Edge(
+                    prev=self,
+                    local_grad=np.ones_like(self.value.T),
+                    backward_fn=_transpose,
+                )
+            ],
         )
 
     @property
