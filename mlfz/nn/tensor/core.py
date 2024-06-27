@@ -258,6 +258,18 @@ class Tensor:
             ],
         )
 
+    def sum(self):
+        return Tensor(
+            value=self.value.sum(),
+            prevs=[
+                Edge(
+                    prev=self,
+                    local_grad=np.ones_like(self.value),
+                    backward_fn=_pointwise,
+                )
+            ],
+        )
+
     @classmethod
     def ones(cls, *shape):
         return Tensor(value=np.ones(shape))
