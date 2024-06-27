@@ -7,32 +7,36 @@ from typing import List
 Edge = namedtuple("Edge", ["prev", "local_grad", "backward_fn"])
 
 
-def _pointwise(backwards_grad, local_grad):
+def _pointwise(backwards_grad: np.ndarray, local_grad: np.ndarray):
     """
     Accumulation of the backwards gradient via pointwise multiplication.
     """
     return backwards_grad * local_grad
 
 
-def _matmul_left(backwards_grad, local_grad):
+def _matmul_left(backwards_grad: np.ndarray, local_grad: np.ndarray):
     """
     Accumulation of the backwards gradient via matrix multiplication.
     """
     return np.dot(backwards_grad, local_grad)
 
 
-def _matmul_right(backwards_grad, local_grad):
+def _matmul_right(backwards_grad: np.ndarray, local_grad: np.ndarray):
     """
     Accumulation of the backwards gradient via matrix multiplication.
     """
     return np.dot(local_grad, backwards_grad)
 
 
-def _transpose(backwards_grad, local_grad):
+def _transpose(backwards_grad: np.ndarray, local_grad: np.ndarray):
     """
     Transposing the backwards gradient.
     """
     return backwards_grad.T
+
+
+def _reshape(backwards_grad: np.ndarray, local_grad: np.ndarray):
+    return backwards_grad.reshape(local_grad.shape)
 
 
 class Tensor:
@@ -241,6 +245,18 @@ class Tensor:
     @property
     def shape(self):
         return self.value.shape
+
+    def reshape(self, *args):
+        return Tensor(
+            value=self.value.reshape(*args),
+            prevs=[
+                Edge(
+                    prev=self,
+                    local_grad=np.ones_like(self.value),
+                    backward_fn=_reshape,
+                )
+            ],
+        )
 
     @classmethod
     def ones(cls, *shape):

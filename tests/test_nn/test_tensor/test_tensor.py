@@ -73,6 +73,14 @@ def test_add():
     ).all()
 
 
+def test_reshape():
+    x = Tensor(np.array([[1, 2], [3, 4], [5, 6]]))
+
+    assert (x.reshape(2, 3).value == x.value.reshape(2, 3)).all()
+    assert (x.reshape(1, -1).value == x.value.reshape(1, -1)).all()
+    assert (x.reshape(-1).value == x.value.reshape(-1)).all()
+
+
 def test_mul():
     x = Tensor(np.array([[1, 2], [3, 4], [5, 6]]))
 
