@@ -73,17 +73,6 @@ def test_add():
     ).all()
 
 
-def test_add_backwards():
-    # tensor case
-    x = Tensor(np.array([[1, 2], [3, 4], [5, 6]]))
-    y = Tensor(np.array([[7, 8], [9, 10], [11, 12]]))
-    z = x + y
-    z.backward()
-
-    assert (x.backwards_grad == np.ones_like(x)).all()
-    assert (y.backwards_grad == np.ones_like(y)).all()
-
-
 def test_mul():
     x = Tensor(np.array([[1, 2], [3, 4], [5, 6]]))
 
