@@ -35,8 +35,40 @@ def _transpose(backwards_grad: np.ndarray, local_grad: np.ndarray):
     return backwards_grad.T
 
 
+def _broadcast(backwards_grad, local_grad):
+    """
+    Broadcasts the backwards gradient to match the local gradient.
+    """
+
+    y_list = list(backwards_grad.shape)
+    backwards_grad_new_shape = tuple(
+        y_list.pop(y_list.index(val)) if val in y_list else 1
+        for val in local_grad.shape
+    )
+    backwards_grad = backwards_grad.reshape(backwards_grad_new_shape)
+    return np.broadcast_to(backwards_grad, local_grad.shape)
+
+
 def _reshape(backwards_grad: np.ndarray, local_grad: np.ndarray):
+    """
+    Reshapes the backwards gradient to the shape of the local gradient.
+    """
     return backwards_grad.reshape(local_grad.shape)
+
+
+def sum(x, axis=None):
+    x_summed = x.value.sum(axis=axis)
+
+    return Tensor(
+        value=x_summed,
+        prevs=[
+            Edge(
+                prev=x,
+                local_grad=np.ones_like(x.value),
+                backward_fn=_broadcast,
+            )
+        ],
+    )
 
 
 class Tensor:
@@ -100,7 +132,7 @@ class Tensor:
     def backward(self, zero_grad=True):
         ordered_tensors = self._get_graph(zero_grad=zero_grad)
 
-        self.backwards_grad = 1
+        self.backwards_grad = np.array(1)
 
         for tensor in reversed(ordered_tensors):
             tensor._backward_step()
@@ -258,17 +290,8 @@ class Tensor:
             ],
         )
 
-    def sum(self):
-        return Tensor(
-            value=self.value.sum(),
-            prevs=[
-                Edge(
-                    prev=self,
-                    local_grad=np.ones_like(self.value),
-                    backward_fn=_pointwise,
-                )
-            ],
-        )
+    def sum(self, axis=None):
+        return sum(self, axis)
 
     @classmethod
     def ones(cls, *shape):

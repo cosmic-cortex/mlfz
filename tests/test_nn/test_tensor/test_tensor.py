@@ -1,5 +1,5 @@
 import numpy as np
-from mlfz.nn.tensor import Tensor
+from mlfz.nn.tensor import Tensor, sum
 
 
 def test_init():
@@ -71,6 +71,17 @@ def test_add():
     assert (
         y4_left.value == np.array([[1 + 1, 2 + 2], [3 + 3, 4 + 4], [5 + 5, 6 + 6]])
     ).all()
+
+
+def test_sum():
+    x = Tensor(np.array([[[1, 2], [3, 4], [5, 6]], [[7, 8], [9, 10], [11, 12]]]))
+    axs = [None, 0, 1, 2, (0, 1), (0, 2), (1, 2), (0, 1, 2)]
+
+    for axis in axs:
+        x_sum = sum(x, axis=axis)
+        x_sum_method = x.sum(axis=axis)
+        assert (x_sum.value == np.sum(x.value, axis=axis)).all()
+        assert (x_sum.value == x_sum_method.value).all()
 
 
 def test_reshape():
