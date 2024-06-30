@@ -62,7 +62,7 @@ def test_sub_pow():
     assert np.allclose(y.backwards_grad, _finite_diff(partial(f, x.value), y.value))
 
 
-def test_reshape_sum():
+def test_reshape():
     x = Tensor(
         np.array([[1.0, 2.0, 3.0, 4.0], [5.0, 6.0, 7.0, 8.0], [9.0, 10.0, 11.0, 12.0]])
     )
@@ -79,3 +79,24 @@ def test_reshape_sum():
         y = f(x)
         y.backward()
         assert np.allclose(y.backwards_grad, _finite_diff(f, x.value))
+
+
+def test_matmul():
+    x = Tensor.ones(5, 4)
+    y = Tensor.ones(4, 8)
+
+    f = lambda x, y: (x @ y).sum()
+    z = f(x, y)
+    z.backward()
+
+    assert np.allclose(x.backwards_grad, _finite_diff(partial(f, y=y.value), x.value))
+    assert np.allclose(y.backwards_grad, _finite_diff(partial(f, x.value), y.value))
+
+
+def test_transpose():
+    x = Tensor.ones(5, 8)
+    f = lambda x: x.T.sum()
+    y = f(x)
+    y.backward()
+
+    assert np.allclose(y.backwards_grad, _finite_diff(f, x.value))

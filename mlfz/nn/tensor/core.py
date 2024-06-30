@@ -259,6 +259,7 @@ class Tensor:
 
         return other**self
 
+    @property
     def T(self):
         """
         Transpose of tensors.
