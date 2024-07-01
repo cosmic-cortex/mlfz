@@ -81,7 +81,17 @@ def test_reshape():
 
 
 def test_broadcast_to():
-    x = Tensor.ones(3)
+    x = Tensor.ones(3, 1)
+    shapes = [(3, 2), (3, 5), (3, 9)]
+
+    for s in shapes:
+        f = lambda x: x.broadcast_to(*s).sum()
+        f_np = lambda x: np.broadcast_to(x, s).sum()
+
+        y = f(x)
+        y.backward()
+
+        assert np.allclose(x.backwards_grad, _finite_diff(f_np, x.value))
 
 
 def test_matmul():

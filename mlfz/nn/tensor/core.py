@@ -7,6 +7,11 @@ from typing import List
 Edge = namedtuple("Edge", ["prev", "local_grad", "backward_fn"])
 
 
+def _check_shape(shape, shape_subseq):
+    it = iter(shape)
+    return all(elem in it for elem in shape_subseq)
+
+
 def _pointwise(backwards_grad: np.ndarray, local_grad: np.ndarray):
     """
     Accumulation of the backwards gradient via pointwise multiplication.
@@ -40,6 +45,8 @@ def _broadcast(backwards_grad, local_grad):
     Broadcasts the backwards gradient to match the local gradient.
     """
 
+    assert _check_shape(local_grad.shape, backwards_grad.shape)
+
     y_list = list(backwards_grad.shape)
     backwards_grad_new_shape = tuple(
         y_list.pop(y_list.index(val)) if val in y_list else 1
@@ -49,11 +56,36 @@ def _broadcast(backwards_grad, local_grad):
     return np.broadcast_to(backwards_grad, local_grad.shape)
 
 
-def _reshape(backwards_grad: np.ndarray, local_grad: np.ndarray):
+def _reshape_and_multiply(backwards_grad: np.ndarray, local_grad: np.ndarray):
     """
-    Reshapes the backwards gradient to the shape of the local gradient.
+    Reshapes the backwards gradient to the shape of the local gradient,
+    then multiplies them together pointwise,
     """
-    return backwards_grad.reshape(local_grad.shape)
+    return local_grad * backwards_grad.reshape(local_grad.shape)
+
+
+def _sum_and_multiply(backwards_grad: np.ndarray, local_grad: np.ndarray):
+    """
+    Sums the backwards gradient along axes to match  the shape of the
+    local gradient, then multiplies them together pointwise.
+    """
+
+    # assert _check_shape(local_grad.shape, backwards_grad.shape)
+
+    backwards_grad_shape = backwards_grad.shape
+    local_grad_shape = local_grad.shape
+
+    axes_to_sum = [
+        i
+        for i in range(len(backwards_grad_shape))
+        if backwards_grad_shape[i] not in local_grad_shape
+        or backwards_grad_shape.count(backwards_grad_shape[i])
+        > local_grad_shape.count(backwards_grad_shape[i])
+    ]
+
+    result = np.sum(backwards_grad, axis=tuple(axes_to_sum))
+
+    return local_grad * result
 
 
 def sum(x, axis=None):
@@ -126,7 +158,7 @@ class Tensor:
     def _zero_grad(self):
         self._get_graph(zero_grad=True)
 
-    def gradient_update(self):
+    def gradient_update(self, lr):
         self.value -= lr * self.backwards_grad
 
     def backward(self, zero_grad=True):
@@ -286,13 +318,25 @@ class Tensor:
                 Edge(
                     prev=self,
                     local_grad=np.ones_like(self.value),
-                    backward_fn=_reshape,
+                    backward_fn=_reshape_and_multiply,
                 )
             ],
         )
 
     def sum(self, axis=None):
         return sum(self, axis)
+
+    def broadcast_to(self, *shape):
+        return Tensor(
+            value=np.broadcast_to(self.value, shape),
+            prevs=[
+                Edge(
+                    prev=self,
+                    local_grad=np.ones_like(self.value),
+                    backward_fn=_sum_and_multiply,
+                )
+            ],
+        )
 
     @classmethod
     def ones(cls, *shape):
