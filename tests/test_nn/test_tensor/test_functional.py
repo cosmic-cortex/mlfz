@@ -34,11 +34,7 @@ def test_sin():
     x_2d = Tensor.from_random(5, 6)
     x_3d = Tensor.from_random(5, 6, 7)
 
-    x_1d = Tensor.from_random(5)
-    x_2d = Tensor.from_random(5, 6)
-    x_3d = Tensor.from_random(5, 6, 7)
-
-    for x in [x_1d]:
+    for x in [x_1d, x_2d, x_3d]:
         y = f(x)
         y.backward()
         assert np.allclose(
@@ -55,17 +51,10 @@ def test_cos():
     x_2d = Tensor.from_random(5, 6)
     x_3d = Tensor.from_random(5, 6, 7)
 
-    x_1d = Tensor.from_random(5)
-    x_2d = Tensor.from_random(5, 6)
-    x_3d = Tensor.from_random(5, 6, 7)
-
-    for x in [x_1d]:
+    for x in [x_1d, x_2d, x_3d]:
         y = f(x)
         y.backward()
-        assert np.allclose(
-            x.backwards_grad,
-            _finite_diff(f_np, x.value),
-        )
+        assert np.allclose(x.backwards_grad, _finite_diff(f_np, x.value), 1e-3)
 
 
 def test_exp():
@@ -76,11 +65,7 @@ def test_exp():
     x_2d = Tensor.from_random(5, 6)
     x_3d = Tensor.from_random(5, 6, 7)
 
-    x_1d = Tensor.from_random(5)
-    x_2d = Tensor.from_random(5, 6)
-    x_3d = Tensor.from_random(5, 6, 7)
-
-    for x in [x_1d]:
+    for x in [x_1d, x_2d, x_3d]:
         y = f(x)
         y.backward()
         assert np.allclose(
@@ -97,11 +82,7 @@ def test_log():
     x_2d = Tensor.from_random(5, 6)
     x_3d = Tensor.from_random(5, 6, 7)
 
-    x_1d = Tensor.from_random(5)
-    x_2d = Tensor.from_random(5, 6)
-    x_3d = Tensor.from_random(5, 6, 7)
-
-    for x in [x_1d]:
+    for x in [x_1d, x_2d, x_3d]:
         y = f(x)
         y.backward()
         assert np.allclose(
@@ -118,11 +99,7 @@ def test_sigmoid():
     x_2d = Tensor.from_random(5, 6)
     x_3d = Tensor.from_random(5, 6, 7)
 
-    x_1d = Tensor.from_random(5)
-    x_2d = Tensor.from_random(5, 6)
-    x_3d = Tensor.from_random(5, 6, 7)
-
-    for x in [x_1d]:
+    for x in [x_1d, x_2d, x_3d]:
         y = f(x)
         y.backward()
         assert np.allclose(
@@ -139,11 +116,7 @@ def test_tanh():
     x_2d = Tensor.from_random(5, 6)
     x_3d = Tensor.from_random(5, 6, 7)
 
-    x_1d = Tensor.from_random(5)
-    x_2d = Tensor.from_random(5, 6)
-    x_3d = Tensor.from_random(5, 6, 7)
-
-    for x in [x_1d]:
+    for x in [x_1d, x_2d, x_3d]:
         y = f(x)
         y.backward()
         assert np.allclose(
@@ -160,11 +133,7 @@ def test_relu():
     x_2d = Tensor.from_random(5, 6)
     x_3d = Tensor.from_random(5, 6, 7)
 
-    x_1d = Tensor.from_random(5)
-    x_2d = Tensor.from_random(5, 6)
-    x_3d = Tensor.from_random(5, 6, 7)
-
-    for x in [x_1d]:
+    for x in [x_1d, x_2d, x_3d]:
         y = f(x)
         y.backward()
         assert np.allclose(

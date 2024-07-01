@@ -12,7 +12,6 @@ def _finite_diff(f, x, h=1e-8):
         x_backward = x.copy()
         x_forward[idx] += h
         x_backward[idx] -= h
-        print(x_forward.dtype, x_backward)
         grad[idx] = (f(x_forward) - f(x_backward)) / (2 * h)
 
     return grad.reshape(x.shape)
@@ -79,6 +78,10 @@ def test_reshape():
         y = f(x)
         y.backward()
         assert np.allclose(y.backwards_grad, _finite_diff(f, x.value))
+
+
+def test_broadcast_to():
+    x = Tensor.ones(3)
 
 
 def test_matmul():
