@@ -1,5 +1,5 @@
 import numpy as np
-from mlfz.nn.tensor import Tensor, sum
+from mlfz.nn.tensor import Tensor, sum, mean
 from itertools import product
 
 
@@ -68,6 +68,17 @@ def test_sum():
         x_sum_method = x.sum(axis=axis)
         assert (x_sum.value == np.sum(x.value, axis=axis)).all()
         assert (x_sum.value == x_sum_method.value).all()
+
+
+def test_mean():
+    x = Tensor(np.array([[[1, 2], [3, 4], [5, 6]], [[7, 8], [9, 10], [11, 12]]]))
+    axs = [None, 0, 1, 2, (0, 1), (0, 2), (1, 2), (0, 1, 2)]
+
+    for axis in axs:
+        x_mean = mean(x, axis=axis)
+        x_mean_method = x.mean(axis=axis)
+        assert (x_mean.value == np.mean(x.value, axis=axis)).all()
+        assert (x_mean.value == x_mean_method.value).all()
 
 
 def test_reshape():

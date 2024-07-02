@@ -1,5 +1,6 @@
 import numpy as np
-from .core import Tensor, Edge, _pointwise
+from .core import Tensor, Edge
+from .core.utils import _pointwise
 
 
 import numpy as np
