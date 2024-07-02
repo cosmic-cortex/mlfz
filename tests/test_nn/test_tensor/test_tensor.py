@@ -1,5 +1,6 @@
 import numpy as np
 from mlfz.nn.tensor import Tensor, sum
+from itertools import product
 
 
 def test_init():
@@ -34,43 +35,28 @@ def test_init():
     assert (x_zeros_like_from_np.value == x_zeros_true).all()
 
 
-def test_add():
-    x = Tensor(np.array([[1, 2], [3, 4], [5, 6]]))
+def test_binary_ops():
+    x = 2 * Tensor.ones(3, 2)
+    ys = [
+        Tensor(2),
+        2 * Tensor.ones(3, 2),
+        2 * Tensor.ones(3, 1),
+        2 * Tensor.ones(1, 2),
+    ]
 
-    # scalar case
-    y1 = Tensor(2) + x
-    y1_left = x + Tensor(2)
-    assert (y1.value == 2 + x.value).all()
-    assert (y1_left.value == x.value + 2).all()
+    fs = [
+        lambda x, y: (x + y).sum(),
+        lambda x, y: (y + x).sum(),
+        lambda x, y: (x * y).sum(),
+        lambda x, y: (y * x).sum(),
+        lambda x, y: (x**y).sum(),
+        lambda x, y: (x / y).sum(),
+    ]
 
-    # tensor case
-    t_1d_col = Tensor(np.array([[1], [2], [3]]))
-    t_1d_row = Tensor(np.array([1, 2]))
-    t_2d = Tensor(np.array([[1, 2], [3, 4], [5, 6]]))
-    y2 = t_1d_col + x
-    y2_left = x + t_1d_col
-    y3 = x + t_1d_row
-    y3_left = t_1d_row + x
-    y4 = t_2d + x
-    y4_left = x + t_2d
-    assert (
-        y2.value == np.array([[1 + 1, 2 + 1], [3 + 2, 4 + 2], [5 + 3, 6 + 3]])
-    ).all()
-    assert (
-        y2_left.value == np.array([[1 + 1, 2 + 1], [3 + 2, 4 + 2], [5 + 3, 6 + 3]])
-    ).all()
-    assert (
-        y3.value == np.array([[1 + 1, 2 + 2], [3 + 1, 4 + 2], [5 + 1, 6 + 2]])
-    ).all()
-    assert (
-        y3_left.value == np.array([[1 + 1, 2 + 2], [3 + 1, 4 + 2], [5 + 1, 6 + 2]])
-    ).all()
-    assert (
-        y4.value == np.array([[1 + 1, 2 + 2], [3 + 3, 4 + 4], [5 + 5, 6 + 6]])
-    ).all()
-    assert (
-        y4_left.value == np.array([[1 + 1, 2 + 2], [3 + 3, 4 + 4], [5 + 5, 6 + 6]])
-    ).all()
+    for f, y in product(fs, ys):
+        z = f(x, y)
+        z_np = f(x.value, y.value)
+        assert (z.value == z_np).all()
 
 
 def test_sum():
@@ -90,93 +76,6 @@ def test_reshape():
     assert (x.reshape(2, 3).value == x.value.reshape(2, 3)).all()
     assert (x.reshape(1, -1).value == x.value.reshape(1, -1)).all()
     assert (x.reshape(-1).value == x.value.reshape(-1)).all()
-
-
-def test_mul():
-    x = Tensor(np.array([[1, 2], [3, 4], [5, 6]]))
-
-    # scalar case
-    y1 = Tensor(2) * x
-    y1_left = x * Tensor(2)
-    assert (y1.value == 2 * x.value).all()
-    assert (y1_left.value == x.value * 2).all()
-
-    # tensor case
-    t_1d_col = Tensor(np.array([[1], [2], [3]]))
-    t_1d_row = Tensor(np.array([1, 2]))
-    t_2d = Tensor(np.array([[1, 2], [3, 4], [5, 6]]))
-    y2 = t_1d_col * x
-    y2_left = x * t_1d_col
-    y3 = x * t_1d_row
-    y3_left = t_1d_row * x
-    y4 = t_2d * x
-    y4_left = x * t_2d
-    assert (
-        y2.value == np.array([[1 * 1, 2 * 1], [3 * 2, 4 * 2], [5 * 3, 6 * 3]])
-    ).all()
-    assert (
-        y2_left.value == np.array([[1 * 1, 2 * 1], [3 * 2, 4 * 2], [5 * 3, 6 * 3]])
-    ).all()
-    assert (
-        y3.value == np.array([[1 * 1, 2 * 2], [3 * 1, 4 * 2], [5 * 1, 6 * 2]])
-    ).all()
-    assert (
-        y3_left.value == np.array([[1 * 1, 2 * 2], [3 * 1, 4 * 2], [5 * 1, 6 * 2]])
-    ).all()
-    assert (
-        y4.value == np.array([[1 * 1, 2 * 2], [3 * 3, 4 * 4], [5 * 5, 6 * 6]])
-    ).all()
-    assert (
-        y4_left.value == np.array([[1 * 1, 2 * 2], [3 * 3, 4 * 4], [5 * 5, 6 * 6]])
-    ).all()
-
-
-def test_div():
-    x = Tensor(np.array([[1, 2], [3, 4], [5, 6]]))
-
-    # scalar case
-    y1 = x / Tensor(2)
-    y1_left = Tensor(2) / x
-    assert (y1.value == x.value / 2).all()
-    assert (y1_left.value == 2 / x.value).all()
-
-    # tensor case
-    t_1d_col = Tensor(np.array([[1], [2], [3]]))
-    t_1d_row = Tensor(np.array([1, 2]))
-    t_2d = Tensor(np.array([[1, 2], [3, 4], [5, 6]]))
-    y2 = x / t_1d_col
-    y3 = x / t_1d_row
-    y4 = x / t_2d
-    assert (
-        y2.value == np.array([[1 / 1, 2 / 1], [3 / 2, 4 / 2], [5 / 3, 6 / 3]])
-    ).all()
-    assert (
-        y3.value == np.array([[1 / 1, 2 / 2], [3 / 1, 4 / 2], [5 / 1, 6 / 2]])
-    ).all()
-    assert (
-        y4.value == np.array([[1 / 1, 2 / 2], [3 / 3, 4 / 4], [5 / 5, 6 / 6]])
-    ).all()
-
-
-def test_pow():
-    x = Tensor(np.array([[1, 2], [3, 4], [5, 6]]))
-
-    # scalar case
-    y1 = x**2
-    y2 = 2**x
-    assert (y1.value == np.array([[1, 2**2], [3**2, 4**2], [5**2, 6**2]])).all()
-    assert (y2.value == np.array([[2**1, 2**2], [2**3, 2**4], [2**5, 2**6]])).all()
-
-    # tensor case
-    t_1d_col = Tensor(np.array([[1], [2], [3]]))
-    t_1d_row = Tensor(np.array([1, 2]))
-    t_2d = Tensor(np.array([[1, 2], [3, 4], [5, 6]]))
-    y3 = x**t_1d_col
-    y4 = x**t_1d_row
-    y5 = x**t_2d
-    assert (y3.value == np.array([[1**1, 2**1], [3**2, 4**2], [5**3, 6**3]])).all()
-    assert (y4.value == np.array([[1**1, 2**2], [3**1, 4**2], [5**1, 6**2]])).all()
-    assert (y5.value == np.array([[1**1, 2**2], [3**3, 4**4], [5**5, 6**6]])).all()
 
 
 def test_broadcast_to():

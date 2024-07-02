@@ -1,6 +1,7 @@
 import numpy as np
 from mlfz.nn.tensor import Tensor
 from functools import partial
+from itertools import product
 
 
 def _finite_diff(f, x, h=1e-8):
@@ -18,35 +19,36 @@ def _finite_diff(f, x, h=1e-8):
 
 
 def test_binary_ops():
-    x = Tensor(np.array([[1.0, 2.0], [3.0, 4.0], [5.0, 6.0]]))
+    x = 2 * Tensor.ones(3, 2)
     ys = [
         Tensor(2),
-        Tensor(np.array([[7.0, 8.0], [9.0, 10.0], [11.0, 12.0]])),
-        Tensor(np.array([[1], [2], [3]])),
-        Tensor(np.array([1, 2])),
+        2 * Tensor.ones(3, 2),
+        2 * Tensor.ones(3, 1),
+        2 * Tensor.ones(1, 2),
     ]
-
-    # TODO: y's backward_grad is incorrect for pow and div
 
     fs = [
         lambda x, y: (x + y).sum(),
         lambda x, y: (y + x).sum(),
         lambda x, y: (x * y).sum(),
         lambda x, y: (y * x).sum(),
-        # lambda x, y: (x**y).sum(),
-        # lambda x, y: (x / y).sum(),
+        lambda x, y: (x**y).sum(),
+        lambda x, y: (x / y).sum(),
     ]
 
-    for f in fs:
-        for y in ys:
-            z = f(x, y)
-            z.backward()
-            assert np.allclose(
-                x.backwards_grad, _finite_diff(partial(f, y=y.value), x.value), 1e-4
-            )
-            assert np.allclose(
-                y.backwards_grad, _finite_diff(partial(f, x.value), y.value), 1e-4
-            )
+    for f, y in product(fs, ys):
+        z = f(x, y)
+        z.backward()
+        assert np.allclose(
+            x.backwards_grad,
+            _finite_diff(partial(f, y=y.value), x.value),
+            1e-4,
+        )
+        assert np.allclose(
+            y.backwards_grad,
+            _finite_diff(partial(f, x.value), y.value),
+            1e-4,
+        )
 
 
 def test_sum():
