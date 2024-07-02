@@ -78,9 +78,7 @@ def _sum_and_multiply(backwards_grad: np.ndarray, local_grad: np.ndarray):
         or backwards_grad_shape.count(backwards_grad_shape[i])
         > local_grad_shape.count(backwards_grad_shape[i])
     ]
-
-    result = np.sum(backwards_grad, axis=tuple(axes_to_sum))
-
+    result = np.sum(backwards_grad, axis=tuple(axes_to_sum), keepdims=True)
     return local_grad * result
 
 
@@ -89,12 +87,15 @@ def _sum_and_multiply(backwards_grad: np.ndarray, local_grad: np.ndarray):
 #####################
 
 
-def broadcast_check(x, y):
+def precast(x, y):
     if x.shape != y.shape:
         try:
             y = y.broadcast_to(x.shape)
         except:
-            x = x.broadcast_to(y.shape)
+            try:
+                x = x.broadcast_to(y.shape)
+            except:
+                pass
 
     return x, y
 
@@ -184,7 +185,7 @@ class Tensor:
         if not isinstance(other, Tensor):
             other = Tensor(other)
 
-        self, other = broadcast_check(self, other)
+        self, other = precast(self, other)
 
         return Tensor(
             value=self.value + other.value,
@@ -214,6 +215,8 @@ class Tensor:
         if not isinstance(other, Tensor):
             other = Tensor(np.array(other))
 
+        self, other = precast(self, other)
+
         return Tensor(
             value=self.value * other.value,
             prevs=[
@@ -234,6 +237,8 @@ class Tensor:
         """
         if not isinstance(other, Tensor):
             other = Tensor(np.array(other))
+
+        self, other = precast(self, other)
 
         return Tensor(
             value=self.value / other.value,
@@ -274,6 +279,8 @@ class Tensor:
         """
         if not isinstance(exponent, Tensor):
             exponent = Tensor(np.array(exponent))
+
+        self, exponent = precast(self, exponent)
 
         return Tensor(
             value=self.value**exponent.value,

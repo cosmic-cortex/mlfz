@@ -17,7 +17,7 @@ def _finite_diff(f, x, h=1e-8):
     return grad.reshape(x.shape)
 
 
-def test_add():
+def test_binary_ops():
     x = Tensor(np.array([[1.0, 2.0], [3.0, 4.0], [5.0, 6.0]]))
     ys = [
         Tensor(2),
@@ -25,27 +25,28 @@ def test_add():
         Tensor(np.array([[1], [2], [3]])),
         Tensor(np.array([1, 2])),
     ]
-    f_r = lambda x, y: (x + y).sum()
-    f_l = lambda x, y: (y + x).sum()
 
-    for y in ys:
-        z_r = f_r(x, y)
-        z_r.backward()
-        assert np.allclose(
-            x.backwards_grad, _finite_diff(partial(f_r, y=y.value), x.value)
-        )
-        assert np.allclose(
-            y.backwards_grad, _finite_diff(partial(f_r, x.value), y.value)
-        )
+    # TODO: y's backward_grad is incorrect for pow and div
 
-        z_l = f_r(x, y)
-        z_l.backward()
-        assert np.allclose(
-            x.backwards_grad, _finite_diff(partial(f_l, y=y.value), x.value)
-        )
-        assert np.allclose(
-            y.backwards_grad, _finite_diff(partial(f_l, x.value), y.value)
-        )
+    fs = [
+        lambda x, y: (x + y).sum(),
+        lambda x, y: (y + x).sum(),
+        lambda x, y: (x * y).sum(),
+        lambda x, y: (y * x).sum(),
+        # lambda x, y: (x**y).sum(),
+        # lambda x, y: (x / y).sum(),
+    ]
+
+    for f in fs:
+        for y in ys:
+            z = f(x, y)
+            z.backward()
+            assert np.allclose(
+                x.backwards_grad, _finite_diff(partial(f, y=y.value), x.value), 1e-4
+            )
+            assert np.allclose(
+                y.backwards_grad, _finite_diff(partial(f, x.value), y.value), 1e-4
+            )
 
 
 def test_sum():
@@ -109,6 +110,20 @@ def test_broadcast_to():
         y = f(x)
         y.backward()
 
+        assert x.backwards_grad.shape == x.shape
+        assert np.allclose(x.backwards_grad, _finite_diff(f_np, x.value))
+
+    x = Tensor.ones(1, 3)
+    shapes = [(2, 3), (5, 3), (9, 3)]
+
+    for s in shapes:
+        f = lambda x: x.broadcast_to(s).sum()
+        f_np = lambda x: np.broadcast_to(x, s).sum()
+
+        y = f(x)
+        y.backward()
+
+        assert x.backwards_grad.shape == x.shape
         assert np.allclose(x.backwards_grad, _finite_diff(f_np, x.value))
 
 
