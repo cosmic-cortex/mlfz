@@ -90,11 +90,11 @@ def _sum_and_multiply(backwards_grad: np.ndarray, local_grad: np.ndarray):
 
 
 def broadcast_check(x, y):
-    if self.shape != other.shape:
+    if x.shape != y.shape:
         try:
-            other = other.broadcast_to(self.shape)
+            y = y.broadcast_to(x.shape)
         except:
-            self = self.broadcast_to(other.shape)
+            x = x.broadcast_to(y.shape)
 
     return x, y
 
@@ -184,11 +184,7 @@ class Tensor:
         if not isinstance(other, Tensor):
             other = Tensor(other)
 
-        if self.shape != other.shape:
-            try:
-                other = other.broadcast_to(self.shape)
-            except:
-                self = self.broadcast_to(other.shape)
+        self, other = broadcast_check(self, other)
 
         return Tensor(
             value=self.value + other.value,
