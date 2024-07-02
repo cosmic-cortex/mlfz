@@ -59,7 +59,9 @@ def _reshape_and_multiply(backwards_grad: np.ndarray, local_grad: np.ndarray):
     Reshapes the backwards gradient to the shape of the local gradient,
     then multiplies them together pointwise,
     """
-    return local_grad * backwards_grad.reshape(local_grad.shape)
+    return (local_grad * backwards_grad.reshape(local_grad.shape)).reshape(
+        local_grad.shape
+    )
 
 
 def _sum_and_multiply(backwards_grad: np.ndarray, local_grad: np.ndarray):
@@ -79,7 +81,7 @@ def _sum_and_multiply(backwards_grad: np.ndarray, local_grad: np.ndarray):
         > local_grad_shape.count(backwards_grad_shape[i])
     ]
     result = np.sum(backwards_grad, axis=tuple(axes_to_sum), keepdims=True)
-    return local_grad * result
+    return (local_grad * result).reshape(local_grad.shape)
 
 
 #####################
