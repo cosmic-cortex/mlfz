@@ -7,11 +7,6 @@ from typing import List
 Edge = namedtuple("Edge", ["prev", "local_grad", "backward_fn"])
 
 
-def _check_shape(shape, shape_subseq):
-    it = iter(shape)
-    return all(elem in it for elem in shape_subseq)
-
-
 def _pointwise(backwards_grad: np.ndarray, local_grad: np.ndarray):
     """
     Accumulation of the backwards gradient via pointwise multiplication.
@@ -45,8 +40,6 @@ def _broadcast(backwards_grad, local_grad):
     Broadcasts the backwards gradient to match the local gradient.
     """
 
-    assert _check_shape(local_grad.shape, backwards_grad.shape)
-
     y_list = list(backwards_grad.shape)
     backwards_grad_new_shape = tuple(
         y_list.pop(y_list.index(val)) if val in y_list else 1
@@ -69,8 +62,6 @@ def _sum_and_multiply(backwards_grad: np.ndarray, local_grad: np.ndarray):
     Sums the backwards gradient along axes to match  the shape of the
     local gradient, then multiplies them together pointwise.
     """
-
-    # assert _check_shape(local_grad.shape, backwards_grad.shape)
 
     backwards_grad_shape = backwards_grad.shape
     local_grad_shape = local_grad.shape
