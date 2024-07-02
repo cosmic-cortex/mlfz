@@ -7,6 +7,11 @@ from typing import List
 Edge = namedtuple("Edge", ["prev", "local_grad", "backward_fn"])
 
 
+#################################################
+# Functions to propagate the gradient backwards #
+#################################################
+
+
 def _pointwise(backwards_grad: np.ndarray, local_grad: np.ndarray):
     """
     Accumulation of the backwards gradient via pointwise multiplication.
@@ -79,19 +84,28 @@ def _sum_and_multiply(backwards_grad: np.ndarray, local_grad: np.ndarray):
     return local_grad * result
 
 
-def sum(x, axis=None):
-    x_summed = x.value.sum(axis=axis)
+#####################
+# Utility functions #
+#####################
 
-    return Tensor(
-        value=x_summed,
-        prevs=[
-            Edge(
-                prev=x,
-                local_grad=np.ones_like(x.value),
-                backward_fn=_broadcast,
-            )
-        ],
-    )
+
+def broadcast_check(x, y):
+    if self.shape != other.shape:
+        try:
+            other = other.broadcast_to(self.shape)
+        except:
+            self = self.broadcast_to(other.shape)
+
+    return x, y
+
+
+####################
+# Tensor functions #
+####################
+
+
+def sum(x, axis=None):
+    return x.sum(axis=axis)
 
 
 class Tensor:
@@ -321,7 +335,18 @@ class Tensor:
         )
 
     def sum(self, axis=None):
-        return sum(self, axis)
+        summed = self.value.sum(axis=axis)
+
+        return Tensor(
+            value=summed,
+            prevs=[
+                Edge(
+                    prev=self,
+                    local_grad=np.ones_like(self.value),
+                    backward_fn=_broadcast,
+                )
+            ],
+        )
 
     def broadcast_to(self, shape):
         return Tensor(
