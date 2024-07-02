@@ -18,42 +18,34 @@ def _finite_diff(f, x, h=1e-8):
 
 
 def test_add():
-    # scalar case
-    # right
     x = Tensor(np.array([[1.0, 2.0], [3.0, 4.0], [5.0, 6.0]]))
-    y = Tensor(2)
+    ys = [
+        Tensor(2),
+        Tensor(np.array([[7.0, 8.0], [9.0, 10.0], [11.0, 12.0]])),
+        Tensor(np.array([[1], [2], [3]])),
+        Tensor(np.array([1, 2])),
+    ]
+    f_r = lambda x, y: (x + y).sum()
+    f_l = lambda x, y: (y + x).sum()
 
-    f = lambda x, y: (x + y).sum()
-    z = f(x, y)
-    z.backward()
+    for y in ys:
+        z_r = f_r(x, y)
+        z_r.backward()
+        assert np.allclose(
+            x.backwards_grad, _finite_diff(partial(f_r, y=y.value), x.value)
+        )
+        assert np.allclose(
+            y.backwards_grad, _finite_diff(partial(f_r, x.value), y.value)
+        )
 
-    assert np.allclose(x.backwards_grad, _finite_diff(partial(f, y=y.value), x.value))
-    assert np.allclose(y.backwards_grad, _finite_diff(partial(f, x.value), y.value))
-
-    # left
-    x = Tensor(2)
-    y = Tensor(np.array([[1.0, 2.0], [3.0, 4.0], [5.0, 6.0]]))
-
-    f = lambda x, y: (x + y).sum()
-    z = f(x, y)
-    z.backward()
-
-    assert np.allclose(x.backwards_grad, _finite_diff(partial(f, y=y.value), x.value))
-    assert np.allclose(y.backwards_grad, _finite_diff(partial(f, x.value), y.value))
-
-    # tensor case
-    # without broadcasting
-    x = Tensor(np.array([[1.0, 2.0], [3.0, 4.0], [5.0, 6.0]]))
-    y = Tensor(np.array([[7.0, 8.0], [9.0, 10.0], [11.0, 12.0]]))
-
-    f = lambda x, y: (x + y).sum()
-    z = f(x, y)
-    z.backward()
-
-    assert np.allclose(x.backwards_grad, _finite_diff(partial(f, y=y.value), x.value))
-    assert np.allclose(y.backwards_grad, _finite_diff(partial(f, x.value), y.value))
-
-    # with broadcasting
+        z_l = f_r(x, y)
+        z_l.backward()
+        assert np.allclose(
+            x.backwards_grad, _finite_diff(partial(f_l, y=y.value), x.value)
+        )
+        assert np.allclose(
+            y.backwards_grad, _finite_diff(partial(f_l, x.value), y.value)
+        )
 
 
 def test_sum():
