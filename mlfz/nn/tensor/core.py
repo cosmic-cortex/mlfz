@@ -170,6 +170,12 @@ class Tensor:
         if not isinstance(other, Tensor):
             other = Tensor(other)
 
+        if self.shape != other.shape:
+            try:
+                other = other.broadcast_to(self.shape)
+            except:
+                self = self.broadcast_to(other.shape)
+
         return Tensor(
             value=self.value + other.value,
             prevs=[
@@ -317,7 +323,7 @@ class Tensor:
     def sum(self, axis=None):
         return sum(self, axis)
 
-    def broadcast_to(self, *shape):
+    def broadcast_to(self, shape):
         return Tensor(
             value=np.broadcast_to(self.value, shape),
             prevs=[

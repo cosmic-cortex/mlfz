@@ -177,3 +177,15 @@ def test_pow():
     assert (y3.value == np.array([[1**1, 2**1], [3**2, 4**2], [5**3, 6**3]])).all()
     assert (y4.value == np.array([[1**1, 2**2], [3**1, 4**2], [5**1, 6**2]])).all()
     assert (y5.value == np.array([[1**1, 2**2], [3**3, 4**4], [5**5, 6**6]])).all()
+
+
+def test_broadcast_to():
+    x = Tensor.ones(3, 1)
+    shapes = [(3, 2), (3, 5), (3, 9)]
+    for s in shapes:
+        assert x.broadcast_to(s).shape == s
+
+    x = Tensor(2)
+    shapes = [(1, 1, 1), (3, 1), (1, 3), (1, 2, 1), (3, 5, 6)]
+    for s in shapes:
+        assert x.broadcast_to(s).shape == s

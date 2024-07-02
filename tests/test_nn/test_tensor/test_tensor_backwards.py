@@ -18,7 +18,31 @@ def _finite_diff(f, x, h=1e-8):
 
 
 def test_add():
+    # scalar case
+    # right
+    x = Tensor(np.array([[1.0, 2.0], [3.0, 4.0], [5.0, 6.0]]))
+    y = Tensor(2)
+
+    f = lambda x, y: (x + y).sum()
+    z = f(x, y)
+    z.backward()
+
+    assert np.allclose(x.backwards_grad, _finite_diff(partial(f, y=y.value), x.value))
+    assert np.allclose(y.backwards_grad, _finite_diff(partial(f, x.value), y.value))
+
+    # left
+    x = Tensor(2)
+    y = Tensor(np.array([[1.0, 2.0], [3.0, 4.0], [5.0, 6.0]]))
+
+    f = lambda x, y: (x + y).sum()
+    z = f(x, y)
+    z.backward()
+
+    assert np.allclose(x.backwards_grad, _finite_diff(partial(f, y=y.value), x.value))
+    assert np.allclose(y.backwards_grad, _finite_diff(partial(f, x.value), y.value))
+
     # tensor case
+    # without broadcasting
     x = Tensor(np.array([[1.0, 2.0], [3.0, 4.0], [5.0, 6.0]]))
     y = Tensor(np.array([[7.0, 8.0], [9.0, 10.0], [11.0, 12.0]]))
 
@@ -28,6 +52,8 @@ def test_add():
 
     assert np.allclose(x.backwards_grad, _finite_diff(partial(f, y=y.value), x.value))
     assert np.allclose(y.backwards_grad, _finite_diff(partial(f, x.value), y.value))
+
+    # with broadcasting
 
 
 def test_sum():
@@ -85,7 +111,7 @@ def test_broadcast_to():
     shapes = [(3, 2), (3, 5), (3, 9)]
 
     for s in shapes:
-        f = lambda x: x.broadcast_to(*s).sum()
+        f = lambda x: x.broadcast_to(s).sum()
         f_np = lambda x: np.broadcast_to(x, s).sum()
 
         y = f(x)
