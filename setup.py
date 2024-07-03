@@ -3,12 +3,12 @@ from setuptools import setup, find_packages
 
 setup(
     name="mlfz",
-    version="0.0.0",
+    version="0.1.0",
     author="Tivadar Danka",
-    description="An educational machine learning library.",
+    description="Machine Learning From Zero: an educational machine learning library.",
     long_description=open("README.md").read(),
     long_description_content_type="text/markdown",
-    url="https://github.com/yourusername/my_pypi_package",
+    url="https://github.com/cosmic-cortex/mlfz",
     packages=find_packages(),
     classifiers=[
         "Programming Language :: Python :: 3",

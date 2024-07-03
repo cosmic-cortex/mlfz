@@ -1,12 +1,13 @@
-name: Upload Python Package to PyPI when a Release is Created
+name: Upload Python Package to PyPI on Push to Main
 
 on:
-  release:
-    types: [created]
+  push:
+    branches:
+      - main
 
 jobs:
   pypi-publish:
-    name: Publish release to PyPI
+    name: Publish to PyPI
     runs-on: ubuntu-latest
     environment:
       name: pypi
@@ -16,7 +17,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Set up Python
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5
         with:
           python-version: "3.x"
       - name: Install dependencies
