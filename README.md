@@ -1,5 +1,5 @@
 # mlfz
-An educational machine learning library.
+Machine Learning From Zero: an educational machine learning library.
 
 ## Installation
 
