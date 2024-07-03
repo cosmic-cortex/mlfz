@@ -1,4 +1,5 @@
 import numpy as np
+from itertools import product
 from mlfz.nn.tensor import Tensor
 from mlfz.nn.tensor.functional import *
 
@@ -26,115 +27,22 @@ def _finite_diff(f, x, h=1e-8):
     return grad.reshape(x.shape)
 
 
-def test_sin():
-    f = lambda x: sin(x).sum()
-    f_np = lambda x: np.sin(x).sum()
+def test_functional():
+    xs = [Tensor.ones(5), Tensor.ones(5, 6), Tensor.ones(5, 6, 7)]
+    fs = [
+        (lambda x: sin(x).sum(), lambda x: np.sin(x).sum()),
+        (lambda x: cos(x).sum(), lambda x: np.cos(x).sum()),
+        (lambda x: exp(x).sum(), lambda x: np.exp(x).sum()),
+        (lambda x: log(x).sum(), lambda x: np.log(x).sum()),
+        (lambda x: sigmoid(x).sum(), lambda x: _sigmoid(x).sum()),
+        (lambda x: tanh(x).sum(), lambda x: np.tanh(x).sum()),
+        (lambda x: relu(x).sum(), lambda x: _relu(x).sum()),
+    ]
 
-    x_1d = Tensor.ones(5)
-    x_2d = Tensor.ones(5, 6)
-    x_3d = Tensor.ones(5, 6, 7)
-
-    for x in [x_1d, x_2d, x_3d]:
-        y = f(x)
+    for x, f in product(xs, fs):
+        f_tensor, f_np = f
+        y = f_tensor(x)
         y.backward()
-        assert np.allclose(
-            x.backwards_grad,
-            _finite_diff(f_np, x.value),
-        )
-
-
-def test_cos():
-    f = lambda x: cos(x).sum()
-    f_np = lambda x: np.cos(x).sum()
-
-    x_1d = Tensor.ones(5)
-    x_2d = Tensor.ones(5, 6)
-    x_3d = Tensor.ones(5, 6, 7)
-
-    for x in [x_1d, x_2d, x_3d]:
-        y = f(x)
-        y.backward()
-        assert np.allclose(x.backwards_grad, _finite_diff(f_np, x.value), 1e-3)
-
-
-def test_exp():
-    f = lambda x: exp(x).sum()
-    f_np = lambda x: np.exp(x).sum()
-
-    x_1d = Tensor.ones(5)
-    x_2d = Tensor.ones(5, 6)
-    x_3d = Tensor.ones(5, 6, 7)
-
-    for x in [x_1d, x_2d, x_3d]:
-        y = f(x)
-        y.backward()
-        assert np.allclose(
-            x.backwards_grad,
-            _finite_diff(f_np, x.value),
-        )
-
-
-def test_log():
-    f = lambda x: log(x).sum()
-    f_np = lambda x: np.log(x).sum()
-
-    x_1d = Tensor.ones(5)
-    x_2d = Tensor.ones(5, 6)
-    x_3d = Tensor.ones(5, 6, 7)
-
-    for x in [x_1d, x_2d, x_3d]:
-        y = f(x)
-        y.backward()
-        assert np.allclose(
-            x.backwards_grad,
-            _finite_diff(f_np, x.value),
-        )
-
-
-def test_sigmoid():
-    f = lambda x: sigmoid(x).sum()
-    f_np = lambda x: _sigmoid(x).sum()
-
-    x_1d = Tensor.ones(5)
-    x_2d = Tensor.ones(5, 6)
-    x_3d = Tensor.ones(5, 6, 7)
-
-    for x in [x_1d, x_2d, x_3d]:
-        y = f(x)
-        y.backward()
-        assert np.allclose(
-            x.backwards_grad,
-            _finite_diff(f_np, x.value),
-        )
-
-
-def test_tanh():
-    f = lambda x: tanh(x).sum()
-    f_np = lambda x: np.tanh(x).sum()
-
-    x_1d = Tensor.ones(5)
-    x_2d = Tensor.ones(5, 6)
-    x_3d = Tensor.ones(5, 6, 7)
-
-    for x in [x_1d, x_2d, x_3d]:
-        y = f(x)
-        y.backward()
-        assert np.allclose(
-            x.backwards_grad,
-            _finite_diff(f_np, x.value),
-        )
-
-
-def test_relu():
-    f = lambda x: relu(x).sum()
-    f_np = lambda x: _relu(x).sum()
-
-    x_1d = Tensor.ones(5)
-    x_2d = Tensor.ones(5, 6)
-    x_3d = Tensor.ones(5, 6, 7)
-
-    for x in [x_1d, x_2d, x_3d]:
-        y = f(x)
         y.backward()
         assert np.allclose(
             x.backwards_grad,

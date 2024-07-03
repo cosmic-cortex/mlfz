@@ -15,7 +15,7 @@ def mean_squared_error(preds: Tensor, ys: Tensor) -> Tensor:
     """
     n_samples = len(preds)
 
-    return (Tensor.ones(1, n_samples) / n_samples) @ (preds - ys) ** 2
+    return ((preds - ys) ** 2).mean()
 
 
 def binary_cross_entropy(preds: Tensor, ys: Tensor) -> Tensor:
@@ -30,4 +30,6 @@ def binary_cross_entropy(preds: Tensor, ys: Tensor) -> Tensor:
         float: The binary cross entropy loss between the predictions and the ground truth.
     """
 
-    pass
+    epsilon = 1e-16
+
+    return -(ys * log(preds + epsilon) + (1 - ys) * log(1 - preds + epsilon)).mean()
