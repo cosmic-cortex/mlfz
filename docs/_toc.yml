@@ -5,10 +5,6 @@ format: jb-book
 root: mlfz.ipynb
 
 parts:
-- caption: Machine learning
-  chapters:
-  - file: 01-machine-learning/wip
-
 - caption: Computational graphs
   chapters:
   - file: 02-computational-graphs/scalar
@@ -16,3 +12,7 @@ parts:
 - caption: Tensors
   chapters:
   - file: 03-tensors/tensor
+
+- caption: Machine learning
+  chapters:
+  - file: 01-machine-learning/wip
