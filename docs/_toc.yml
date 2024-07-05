@@ -9,6 +9,7 @@ parts:
   chapters:
   - file: 02-computational-graphs/scalar
   - file: 02-computational-graphs/model
+  - file: 02-computational-graphs/mlp
 
 - caption: Tensors
   chapters:
