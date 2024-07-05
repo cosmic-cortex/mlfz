@@ -8,6 +8,7 @@ parts:
 - caption: Computational graphs
   chapters:
   - file: 02-computational-graphs/scalar
+  - file: 02-computational-graphs/model
 
 - caption: Tensors
   chapters:
