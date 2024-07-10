@@ -3,7 +3,7 @@ from setuptools import setup, find_packages
 
 setup(
     name="mlfz",
-    version="0.1.0",
+    version="0.1.1",
     author="Tivadar Danka",
     description="Machine Learning From Zero: an educational machine learning library.",
     long_description=open("README.md").read(),
