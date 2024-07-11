@@ -14,6 +14,8 @@ parts:
 - caption: Tensors
   chapters:
   - file: 03-tensors/tensor
+  - file: 03-tensors/mlp
+  - file: 03-tensors/comparison
 
 - caption: Machine learning
   chapters:
