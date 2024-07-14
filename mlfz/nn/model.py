@@ -1,5 +1,6 @@
 from abc import ABC, abstractmethod
 from typing import Any
+from copy import deepcopy
 
 
 class Model(ABC):
@@ -20,6 +21,9 @@ class Model(ABC):
     @abstractmethod
     def parameters(self):
         pass
+
+    def copy_parameters(self):
+        return deepcopy(self.parameters())
 
     def parameter_values(self):
         return {name: param.value for name, param in self.parameters().items()}

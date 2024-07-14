@@ -1,0 +1,22 @@
+# Table of contents
+# Learn more at https://jupyterbook.org/customize/toc.html
+
+format: jb-book
+root: mlfz.ipynb
+
+parts:
+- caption: Computational graphs
+  chapters:
+  - file: 02-computational-graphs/scalar
+  - file: 02-computational-graphs/model
+  - file: 02-computational-graphs/mlp
+
+- caption: Tensors
+  chapters:
+  - file: 03-tensors/tensor
+  - file: 03-tensors/mlp
+  - file: 03-tensors/comparison
+
+- caption: Machine learning
+  chapters:
+  - file: 01-machine-learning/wip

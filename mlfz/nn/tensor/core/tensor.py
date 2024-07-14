@@ -310,3 +310,8 @@ class Tensor:
     @classmethod
     def from_random(cls, *shape, lower=0, upper=1):
         return Tensor(value=np.random.rand(*shape), prevs=[])
+
+    @classmethod
+    def random_like(cls, tensor):
+        shape = tensor.shape
+        return Tensor(value=np.random.rand(*shape), prevs=[])

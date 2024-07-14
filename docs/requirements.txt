@@ -1,0 +1,6 @@
+jupyter-book
+matplotlib
+graphviz
+seaborn
+numpy
+mlfz
