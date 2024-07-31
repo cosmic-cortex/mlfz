@@ -1,6 +1,7 @@
 import math
 import random
 from collections import namedtuple
+from typing import List
 
 
 Edge = namedtuple("Edge", ["prev", "local_grad"])
@@ -13,9 +14,10 @@ class Scalar:
     Attributes:
         value: The scalar value of the node.
         prevs: A list of Edge instances.
+        backwards_grad: The value of the gradient, computed during backpropagation.
     """
 
-    def __init__(self, value: float, prevs=None):
+    def __init__(self, value: float, prevs: List = None):
         self.value = value
         self.prevs = prevs if prevs is not None else []
         self.backwards_grad = 0
@@ -79,13 +81,13 @@ class Scalar:
         )
 
     def __radd__(self, other):
-        return self.__add__(other)
+        return self + other
 
     def __sub__(self, other):
-        return self.__add__(-other)
+        return self + (-other)
 
     def __rsub__(self, other):
-        return other + self.__neg__()
+        return other + (-self)
 
     def __mul__(self, other):
         if not isinstance(other, Scalar):
@@ -97,7 +99,7 @@ class Scalar:
         )
 
     def __rmul__(self, other):
-        return self.__mul__(other)
+        return self * other
 
     def __neg__(self):
         return (-1) * self
