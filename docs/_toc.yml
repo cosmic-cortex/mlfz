@@ -10,8 +10,10 @@ parts:
   - file: 02-computational-graphs/scalar
   - file: 02-computational-graphs/model
   - file: 02-computational-graphs/mlp
-  - file: 02-computational-graphs/forward
-  - file: 02-computational-graphs/backward
+  - file: 02-computational-graphs/forward-pass
+  - file: 02-computational-graphs/backward-pass-theory
+  - file: 02-computational-graphs/backward-pass-practice
+  - file: 02-computational-graphs/gradient-descent
 
 - caption: Tensors
   chapters:
