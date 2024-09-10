@@ -10,6 +10,9 @@ parts:
   - file: 02-computational-graphs/scalar
   - file: 02-computational-graphs/model
   - file: 02-computational-graphs/mlp
+
+- caption: How `Scalar` works
+  chapters:
   - file: 02-computational-graphs/forward-pass
   - file: 02-computational-graphs/backward-pass-theory
   - file: 02-computational-graphs/backward-pass-practice
