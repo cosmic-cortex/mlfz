@@ -22,7 +22,11 @@ parts:
   chapters:
   - file: 03-tensors/tensor
   - file: 03-tensors/mlp
-  - file: 03-tensors/comparison
+
+- caption: How `Tensor` works
+  chapters:
+  - file: 03-tensors/vectorizing-backpropagation-theory
+  - file: 03-tensors/vectorizing-backpropagation-practice
 
 - caption: Machine learning
   chapters:
