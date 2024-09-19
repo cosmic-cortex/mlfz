@@ -3,6 +3,7 @@ from collections import namedtuple
 from typing import List
 
 from .utils import (
+    _copy,
     _transpose,
     _broadcast_and_multiply,
     _sum_and_multiply,
@@ -102,7 +103,7 @@ class Tensor:
                 Edge(
                     prev=other,
                     local_grad=np.ones_like(other),
-                    backward_fn=_pointwise,
+                    backward_fn=_copy,
                 ),
             ],
         )
