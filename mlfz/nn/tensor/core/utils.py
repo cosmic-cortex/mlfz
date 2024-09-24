@@ -8,13 +8,6 @@ from typing import List
 #################################################
 
 
-def _copy(backwards_grad: np.ndarray, local_grad: np.ndarray):
-    """
-    Copies the backwards gradient.
-    """
-    return backwards_grad
-
-
 def _pointwise(backwards_grad: np.ndarray, local_grad: np.ndarray):
     """
     Accumulation of the backwards gradient via pointwise multiplication.
@@ -26,14 +19,14 @@ def _matmul_left(backwards_grad: np.ndarray, local_grad: np.ndarray):
     """
     Accumulation of the backwards gradient via matrix multiplication.
     """
-    return np.dot(backwards_grad, local_grad)
+    return backwards_grad @ local_grad
 
 
 def _matmul_right(backwards_grad: np.ndarray, local_grad: np.ndarray):
     """
     Accumulation of the backwards gradient via matrix multiplication.
     """
-    return np.dot(local_grad, backwards_grad)
+    return local_grad @ backwards_grad
 
 
 def _transpose(backwards_grad: np.ndarray, local_grad: np.ndarray):

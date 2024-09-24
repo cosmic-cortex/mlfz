@@ -3,7 +3,6 @@ from collections import namedtuple
 from typing import List
 
 from .utils import (
-    _copy,
     _transpose,
     _broadcast_and_multiply,
     _sum_and_multiply,
@@ -79,7 +78,7 @@ class Tensor:
     def backward(self, zero_grad=True):
         ordered_tensors = self._get_graph(zero_grad=zero_grad)
 
-        self.backwards_grad = np.array(1)
+        self.backwards_grad = np.ones_like(self.value)
 
         for tensor in reversed(ordered_tensors):
             tensor._backward_step()
@@ -103,7 +102,7 @@ class Tensor:
                 Edge(
                     prev=other,
                     local_grad=np.ones_like(other),
-                    backward_fn=_copy,
+                    backward_fn=_pointwise,
                 ),
             ],
         )
