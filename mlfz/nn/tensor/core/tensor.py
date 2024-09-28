@@ -5,11 +5,11 @@ from typing import List
 from .utils import (
     _transpose,
     _broadcast_and_multiply,
-    _sum_and_multiply,
+    _reduce,
     _pointwise,
     _matmul_right,
     _matmul_left,
-    _reshape_and_multiply,
+    _reshape,
     precast,
 )
 
@@ -240,7 +240,7 @@ class Tensor:
                 Edge(
                     prev=self,
                     local_grad=np.ones_like(self.value),
-                    backward_fn=_reshape_and_multiply,
+                    backward_fn=_reshape,
                 )
             ],
         )
@@ -284,7 +284,7 @@ class Tensor:
                 Edge(
                     prev=self,
                     local_grad=np.ones_like(self.value),
-                    backward_fn=_sum_and_multiply,
+                    backward_fn=_reduce,
                 )
             ],
         )

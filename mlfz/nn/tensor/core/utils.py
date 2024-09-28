@@ -3,6 +3,17 @@ from collections import namedtuple
 from typing import List
 
 
+######################
+# Broadcasting utils #
+######################
+
+
+def left_pad_shape(X_shape, Y_shape):
+    """
+    Finds the
+    """
+
+
 #################################################
 # Functions to propagate the gradient backwards #
 #################################################
@@ -50,34 +61,42 @@ def _broadcast_and_multiply(backwards_grad, local_grad):
     return np.broadcast_to(backwards_grad, local_grad.shape) * local_grad
 
 
-def _reshape_and_multiply(backwards_grad: np.ndarray, local_grad: np.ndarray):
+def _reshape(backwards_grad: np.ndarray, local_grad: np.ndarray):
     """
-    Reshapes the backwards gradient to the shape of the local gradient,
-    then multiplies them together pointwise,
+    Reshapes the backwards gradient to the shape of the local gradient.
     """
-    return (local_grad * backwards_grad.reshape(local_grad.shape)).reshape(
-        local_grad.shape
-    )
+    return backwards_grad.reshape(local_grad.shape)
 
 
-def _sum_and_multiply(backwards_grad: np.ndarray, local_grad: np.ndarray):
+def _reduce(backwards_grad: np.ndarray, local_grad: np.ndarray):
     """
-    Sums the backwards gradient along axes to match  the shape of the
-    local gradient, then multiplies them together pointwise.
+    Sums the backwards gradient along axes to match the shape of the
+    local gradient.
     """
 
     backwards_grad_shape = backwards_grad.shape
     local_grad_shape = local_grad.shape
 
+    # pads the shape of local_grad with ones
+    n = len(backwards_grad_shape)
+    m = len(local_grad_shape)
+    if m < n:
+        local_grad_shape = tuple(1 for _ in range(n - m)) + local_grad_shape
+    elif m > n:
+        raise ValueError(
+            f"The shapes {backwards_grad_shape} and {local_grad_shape} are not compatible."
+        )
+
+    # find the axes to sum along
     axes_to_sum = [
         i
         for i in range(len(backwards_grad_shape))
-        if backwards_grad_shape[i] not in local_grad_shape
-        or backwards_grad_shape.count(backwards_grad_shape[i])
-        > local_grad_shape.count(backwards_grad_shape[i])
+        if local_grad_shape[i] == 1 and local_grad_shape[i] != backwards_grad_shape[i]
     ]
-    result = np.sum(backwards_grad, axis=tuple(axes_to_sum), keepdims=True)
-    return (local_grad * result).reshape(local_grad.shape)
+
+    return np.sum(backwards_grad, axis=tuple(axes_to_sum), keepdims=True).reshape(
+        local_grad.shape
+    )
 
 
 #####################
