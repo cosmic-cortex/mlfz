@@ -1,16 +1,45 @@
 import numpy as np
 from collections import namedtuple
-from typing import List
+from typing import List, Tuple
 
 
-def blow_up_tuple(tpl, align_to):
-    tpl_list = list(tpl)
+##########################
+# Broadcasting utilities #
+##########################
+
+
+def pad_shapes(x: Tuple, y: Tuple):
+    diff = len(y) - len(x)
+
+    if diff > 0:
+        x = (1,) * diff + x
+    elif diff < 0:
+        y = (1,) * -diff + y
+
+    return x, y
+
+
+def check_shapes(x: Tuple, y: Tuple):
+    return all(d1 == d2 or d1 == 1 or d2 == 1 for d1, d2 in zip(x, y))
+
+
+def broadcasted_shape(x: Tuple, y: Tuple):
+    x, y = pad_shapes(x, y)
+
+    if not check_shapes(x, y):
+        raise ValueError(f"The shapes {x} and {y} are not broadcastable.")
+
+    return tuple(max(i, j) for i, j in zip(x, y))
+
+
+def align_tuple(x: Tuple, align_to: Tuple):
+    tpl_list = list(x)
     return tuple(
         tpl_list.pop(tpl_list.index(val)) if val in tpl_list else 1 for val in align_to
     )
 
 
-################################################
+#################################################
 # Functions to propagate the gradient backwards #
 #################################################
 
@@ -48,7 +77,7 @@ def _broadcast_and_multiply(tensor, local_grad, prev):
     Broadcasts the backwards gradient to match the local gradient.
     """
 
-    backwards_grad_new_shape = blow_up_tuple(tensor.shape, prev.shape)
+    backwards_grad_new_shape = align_tuple(tensor.shape, prev.shape)
     backwards_grad = tensor.backwards_grad.reshape(backwards_grad_new_shape)
     return np.broadcast_to(backwards_grad, local_grad.shape) * local_grad
 
@@ -93,16 +122,8 @@ def _reduce(tensor, local_grad, prev):
 
 
 def precast(x, y):
-    if x.shape != y.shape:
-        try:
-            y = y.broadcast_to(x.shape)
-        except:
-            try:
-                x = x.broadcast_to(y.shape)
-            except:
-                pass
-
-    return x, y
+    bs_shape = broadcasted_shape(x.shape, y.shape)
+    return x.broadcast_to(bs_shape), y.broadcast_to(bs_shape)
 
 
 ####################
