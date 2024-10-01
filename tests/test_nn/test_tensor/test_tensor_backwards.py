@@ -146,6 +146,33 @@ def test_broadcast_to():
         assert x.backwards_grad.shape == x.shape
         assert np.allclose(x.backwards_grad, _finite_diff(f_np, x.value))
 
+    x = Tensor.ones(3)
+    shapes = [(1, 3), (2, 3), (3, 3)]
+
+    for s in shapes:
+        f = lambda x: x.broadcast_to(s).sum()
+        f_np = lambda x: np.broadcast_to(x, s).sum()
+
+        y = f(x)
+        y.backward()
+        print(x.backwards_grad)
+        print(_finite_diff(f_np, x.value))
+        assert x.backwards_grad.shape == x.shape
+        assert np.allclose(x.backwards_grad, _finite_diff(f_np, x.value))
+
+    x = Tensor.ones(4, 5)
+    shapes = [(1, 1, 4, 5), (2, 3, 5, 4, 5)]
+
+    for s in shapes:
+        f = lambda x: x.broadcast_to(s).sum()
+        f_np = lambda x: np.broadcast_to(x, s).sum()
+
+        y = f(x)
+        y.backward()
+
+        assert x.backwards_grad.shape == x.shape
+        assert np.allclose(x.backwards_grad, _finite_diff(f_np, x.value))
+
 
 def test_matmul():
     x = Tensor.ones(5, 4)

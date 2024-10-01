@@ -74,24 +74,20 @@ def _reduce(backwards_grad: np.ndarray, local_grad: np.ndarray):
     local gradient.
     """
 
-    backwards_grad_shape = backwards_grad.shape
-    local_grad_shape = local_grad.shape
-
-    # pads the shape of local_grad with ones
-    n = len(backwards_grad_shape)
-    m = len(local_grad_shape)
-    if m < n:
-        local_grad_shape = tuple(1 for _ in range(n - m)) + local_grad_shape
-    elif m > n:
+    # checking if reduction is possible
+    if local_grad.ndim > backwards_grad.ndim:
         raise ValueError(
-            f"The shapes {backwards_grad_shape} and {local_grad_shape} are not compatible."
+            f"Shapes {backwards_grad.shape} and {local_grad.shape} are not compatible."
         )
+
+    # padding the shape of local_grad with ones
+    local_grad_shape = (1,) * (backwards_grad.ndim - local_grad.ndim) + local_grad.shape
 
     # find the axes to sum along
     axes_to_sum = [
         i
-        for i in range(len(backwards_grad_shape))
-        if local_grad_shape[i] == 1 and local_grad_shape[i] != backwards_grad_shape[i]
+        for i, (bg, lg) in enumerate(zip(backwards_grad.shape, local_grad_shape))
+        if lg == 1 and bg != 1
     ]
 
     return np.sum(backwards_grad, axis=tuple(axes_to_sum), keepdims=True).reshape(
