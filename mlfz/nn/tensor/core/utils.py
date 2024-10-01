@@ -19,35 +19,35 @@ def left_pad_shape(X_shape, Y_shape):
 #################################################
 
 
-def _pointwise(backwards_grad: np.ndarray, local_grad: np.ndarray):
+def _pointwise(backwards_grad, local_grad, prev):
     """
     Accumulation of the backwards gradient via pointwise multiplication.
     """
     return backwards_grad * local_grad
 
 
-def _matmul_left(backwards_grad: np.ndarray, local_grad: np.ndarray):
+def _matmul_left(backwards_grad, local_grad, prev):
     """
     Accumulation of the backwards gradient via matrix multiplication.
     """
     return backwards_grad @ local_grad
 
 
-def _matmul_right(backwards_grad: np.ndarray, local_grad: np.ndarray):
+def _matmul_right(backwards_grad, local_grad, prev):
     """
     Accumulation of the backwards gradient via matrix multiplication.
     """
     return local_grad @ backwards_grad
 
 
-def _transpose(backwards_grad: np.ndarray, local_grad: np.ndarray):
+def _transpose(backwards_grad, local_grad, prev):
     """
     Transposing the backwards gradient.
     """
     return backwards_grad.T
 
 
-def _broadcast_and_multiply(backwards_grad, local_grad):
+def _broadcast_and_multiply(backwards_grad, local_grad, prev):
     """
     Broadcasts the backwards gradient to match the local gradient.
     """
@@ -61,37 +61,37 @@ def _broadcast_and_multiply(backwards_grad, local_grad):
     return np.broadcast_to(backwards_grad, local_grad.shape) * local_grad
 
 
-def _reshape(backwards_grad: np.ndarray, local_grad: np.ndarray):
+def _reshape(backwards_grad, local_grad, prev):
     """
     Reshapes the backwards gradient to the shape of the local gradient.
     """
-    return backwards_grad.reshape(local_grad.shape)
+    return backwards_grad.reshape(prev.shape)
 
 
-def _reduce(backwards_grad: np.ndarray, local_grad: np.ndarray):
+def _reduce(backwards_grad, local_grad, prev):
     """
     Sums the backwards gradient along axes to match the shape of the
     local gradient.
     """
 
     # checking if reduction is possible
-    if local_grad.ndim > backwards_grad.ndim:
+    if prev.ndim > backwards_grad.ndim:
         raise ValueError(
-            f"Shapes {backwards_grad.shape} and {local_grad.shape} are not compatible."
+            f"Shapes {backwards_grad.shape} and {prev.shape} are not compatible."
         )
 
     # padding the shape of local_grad with ones
-    local_grad_shape = (1,) * (backwards_grad.ndim - local_grad.ndim) + local_grad.shape
+    prev_shape = (1,) * (backwards_grad.ndim - prev.ndim) + prev.shape
 
     # find the axes to sum along
     axes_to_sum = [
         i
-        for i, (bg, lg) in enumerate(zip(backwards_grad.shape, local_grad_shape))
+        for i, (bg, lg) in enumerate(zip(backwards_grad.shape, prev_shape))
         if lg == 1 and bg != 1
     ]
 
     return np.sum(backwards_grad, axis=tuple(axes_to_sum), keepdims=True).reshape(
-        local_grad.shape
+        prev.shape
     )
 
 

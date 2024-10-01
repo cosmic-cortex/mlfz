@@ -39,7 +39,9 @@ class Tensor:
 
     def _backward_step(self):
         for prev, local_grad, backward_fn in self.prevs:
-            prev.backwards_grad += backward_fn(self.backwards_grad, local_grad)
+            prev.backwards_grad += backward_fn(
+                self.backwards_grad, local_grad, prev.value
+            )
 
     def _get_graph(self, zero_grad=False):
         """
@@ -233,13 +235,17 @@ class Tensor:
     def shape(self):
         return self.value.shape
 
+    @property
+    def ndim(self):
+        return self.value.ndim
+
     def reshape(self, *args):
         return Tensor(
             value=self.value.reshape(*args),
             prevs=[
                 Edge(
                     prev=self,
-                    local_grad=np.ones_like(self.value),
+                    local_grad=None,
                     backward_fn=_reshape,
                 )
             ],
@@ -283,7 +289,7 @@ class Tensor:
             prevs=[
                 Edge(
                     prev=self,
-                    local_grad=np.ones_like(self.value),
+                    local_grad=None,
                     backward_fn=_reduce,
                 )
             ],
