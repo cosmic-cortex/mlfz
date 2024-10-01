@@ -39,9 +39,7 @@ class Tensor:
 
     def _backward_step(self):
         for prev, local_grad, backward_fn in self.prevs:
-            prev.backwards_grad += backward_fn(
-                self.backwards_grad, local_grad, prev.value
-            )
+            prev.backwards_grad += backward_fn(self, local_grad, prev)
 
     def _get_graph(self, zero_grad=False):
         """
