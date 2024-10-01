@@ -14,7 +14,9 @@ from .utils import (
 )
 
 
-Edge = namedtuple("Edge", ["prev", "local_grad", "backward_fn"])
+Edge = namedtuple(
+    "Edge", ["prev", "local_grad", "backward_fn"], defaults=[None, None, None]
+)
 
 
 class Tensor:
@@ -223,7 +225,6 @@ class Tensor:
             prevs=[
                 Edge(
                     prev=self,
-                    local_grad=np.ones_like(self.value.T),
                     backward_fn=_transpose,
                 )
             ],
@@ -243,7 +244,6 @@ class Tensor:
             prevs=[
                 Edge(
                     prev=self,
-                    local_grad=None,
                     backward_fn=_reshape,
                 )
             ],
@@ -287,7 +287,6 @@ class Tensor:
             prevs=[
                 Edge(
                     prev=self,
-                    local_grad=None,
                     backward_fn=_reduce,
                 )
             ],
