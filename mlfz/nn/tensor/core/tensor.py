@@ -4,7 +4,7 @@ from typing import List
 
 from .utils import (
     _transpose,
-    _broadcast_and_multiply,
+    _weighted_tile,
     _reduce,
     _pointwise,
     _matmul_right,
@@ -249,21 +249,19 @@ class Tensor:
             ],
         )
 
-    def sum(self, axis=None):
-        summed = self.value.sum(axis=axis)
-
+    def sum(self, axis=None, keepdims=False):
         return Tensor(
-            value=summed,
+            value=self.value.sum(axis=axis, keepdims=keepdims),
             prevs=[
                 Edge(
                     prev=self,
-                    local_grad=np.ones_like(self.value),
-                    backward_fn=_broadcast_and_multiply,
+                    local_grad=1,
+                    backward_fn=_weighted_tile,
                 )
             ],
         )
 
-    def mean(self, axis=None):
+    def mean(self, axis=None, keepdims=False):
         N = (
             np.prod(self.shape)
             if axis is None
@@ -271,12 +269,12 @@ class Tensor:
         )
 
         return Tensor(
-            value=np.mean(self.value, axis=axis),
+            value=np.mean(self.value, axis=axis, keepdims=keepdims),
             prevs=[
                 Edge(
                     prev=self,
-                    local_grad=np.ones_like(self.value) / N,
-                    backward_fn=_broadcast_and_multiply,
+                    local_grad=1 / N,
+                    backward_fn=_weighted_tile,
                 )
             ],
         )

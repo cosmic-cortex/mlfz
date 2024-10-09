@@ -72,14 +72,24 @@ def _transpose(tensor, local_grad, prev):
     return tensor.backwards_grad.T
 
 
-def _broadcast_and_multiply(tensor, local_grad, prev):
+def _tile(tensor, local_grad, prev):
     """
-    Broadcasts the backwards gradient to match the local gradient.
+    Blows up the backwards gradient to match the backwards gradient
+    of the previous tensor.
     """
 
     backwards_grad_new_shape = align_tuple(tensor.shape, prev.shape)
     backwards_grad = tensor.backwards_grad.reshape(backwards_grad_new_shape)
-    return np.broadcast_to(backwards_grad, local_grad.shape) * local_grad
+    return np.broadcast_to(backwards_grad, prev.shape)
+
+
+def _weighted_tile(tensor, local_grad, prev):
+    """
+    Broadcasts the backwards gradient to match the backwards gradient
+    of the previous tensor, then weighs it with the local gradient.
+    """
+
+    return _tile(tensor, local_grad, prev) * local_grad
 
 
 def _reshape(tensor, local_grad, prev):
@@ -122,8 +132,10 @@ def _reduce(tensor, local_grad, prev):
 
 
 def precast(x, y):
-    bs_shape = broadcasted_shape(x.shape, y.shape)
-    return x.broadcast_to(bs_shape), y.broadcast_to(bs_shape)
+    if x.shape != y.shape:
+        bs_shape = broadcasted_shape(x.shape, y.shape)
+        x, y = x.broadcast_to(bs_shape), y.broadcast_to(bs_shape)
+    return x, y
 
 
 ####################
