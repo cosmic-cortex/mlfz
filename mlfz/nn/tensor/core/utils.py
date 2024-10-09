@@ -77,7 +77,6 @@ def _tile(tensor, local_grad, prev):
     Blows up the backwards gradient to match the backwards gradient
     of the previous tensor.
     """
-
     backwards_grad_new_shape = align_tuple(tensor.shape, prev.shape)
     backwards_grad = tensor.backwards_grad.reshape(backwards_grad_new_shape)
     return np.broadcast_to(backwards_grad, prev.shape)
@@ -111,7 +110,7 @@ def _reduce(tensor, local_grad, prev):
             f"Shapes {tensor.backwards_grad.shape} and {prev.shape} are not compatible."
         )
 
-    # padding the shape of local_grad with ones
+    # padding the shape of the backwards gradient with ones
     prev_shape = (1,) * (tensor.backwards_grad.ndim - prev.ndim) + prev.shape
 
     # find the axes to sum along
