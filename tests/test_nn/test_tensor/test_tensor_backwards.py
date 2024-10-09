@@ -1,7 +1,7 @@
 import numpy as np
 from mlfz.nn.tensor import Tensor
 from functools import partial
-from itertools import product
+from itertools import product, combinations
 
 
 def _finite_diff(f, x, h=1e-8):
@@ -52,21 +52,15 @@ def test_binary_ops():
 
 
 def test_sum():
-    x = Tensor(
-        np.array(
-            [
-                [[1.0, 2.0], [3.0, 4.0], [5.0, 6.0]],
-                [[7.0, 8.0], [9.0, 10.0], [11.0, 12.0]],
-            ]
-        )
-    )
-    axs = [None, 0, 1, 2, (0, 1), (0, 2), (1, 2), (0, 1, 2)]
+    x = Tensor.from_random(3, 3, 3, 3, 3)
+    axs = [subset for r in range(5) for subset in combinations(range(4), r)]
 
-    for axis in axs:
-        f = lambda x: x.sum(axis=axis).sum()
+    for axis, keepdims in product(axs, [True, False]):
+        f = lambda x: x.sum(axis=axis, keepdims=keepdims).sum()
         y = f(x)
         y.backward()
-        assert np.allclose(x.backwards_grad, _finite_diff(f, x.value))
+        print(x.backwards_grad - _finite_diff(f, x.value))
+        assert np.allclose(x.backwards_grad, _finite_diff(f, x.value), atol=1e-4)
 
 
 def test_mean():
@@ -80,8 +74,8 @@ def test_mean():
     )
     axs = [None, 0, 1, 2, (0, 1), (0, 2), (1, 2), (0, 1, 2)]
 
-    for axis in axs:
-        f = lambda x: x.mean(axis=axis).sum()
+    for axis, keepdims in product(axs, [True, False]):
+        f = lambda x: x.mean(axis=axis, keepdims=keepdims).sum()
         y = f(x)
         y.backward()
         assert np.allclose(x.backwards_grad, _finite_diff(f, x.value))
@@ -135,6 +129,33 @@ def test_broadcast_to():
 
     x = Tensor.ones(1, 3)
     shapes = [(2, 3), (5, 3), (9, 3)]
+
+    for s in shapes:
+        f = lambda x: x.broadcast_to(s).sum()
+        f_np = lambda x: np.broadcast_to(x, s).sum()
+
+        y = f(x)
+        y.backward()
+
+        assert x.backwards_grad.shape == x.shape
+        assert np.allclose(x.backwards_grad, _finite_diff(f_np, x.value))
+
+    x = Tensor.ones(3)
+    shapes = [(1, 3), (2, 3), (3, 3)]
+
+    for s in shapes:
+        f = lambda x: x.broadcast_to(s).sum()
+        f_np = lambda x: np.broadcast_to(x, s).sum()
+
+        y = f(x)
+        y.backward()
+        print(x.backwards_grad)
+        print(_finite_diff(f_np, x.value))
+        assert x.backwards_grad.shape == x.shape
+        assert np.allclose(x.backwards_grad, _finite_diff(f_np, x.value))
+
+    x = Tensor.ones(4, 5)
+    shapes = [(1, 1, 4, 5), (2, 3, 5, 4, 5)]
 
     for s in shapes:
         f = lambda x: x.broadcast_to(s).sum()

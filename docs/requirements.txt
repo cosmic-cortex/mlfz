@@ -1,3 +1,4 @@
+sphinx-proof
 jupyter-book
 matplotlib
 graphviz

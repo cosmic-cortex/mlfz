@@ -18,7 +18,7 @@ def test_optimizer():
             return {"a": self.a, "b": self.b}
 
     linear_regressor = LinearRegression()
-    optimizer = GradientDescent(model=linear_regressor, loss=mean_squared_error)
+    optimizer = GradientDescent(model=linear_regressor, loss_fn=mean_squared_error)
 
     xs = [k * 0.01 for k in range(100)]
     ys = [0.5 * k * 0.01 - 0.5 for k in range(100)]

@@ -4,17 +4,19 @@ from typing import List
 
 from .utils import (
     _transpose,
-    _broadcast_and_multiply,
-    _sum_and_multiply,
+    _weighted_tile,
+    _reduce,
     _pointwise,
     _matmul_right,
     _matmul_left,
-    _reshape_and_multiply,
+    _reshape,
     precast,
 )
 
 
-Edge = namedtuple("Edge", ["prev", "local_grad", "backward_fn"])
+Edge = namedtuple(
+    "Edge", ["prev", "local_grad", "backward_fn"], defaults=[None, None, None]
+)
 
 
 class Tensor:
@@ -39,7 +41,7 @@ class Tensor:
 
     def _backward_step(self):
         for prev, local_grad, backward_fn in self.prevs:
-            prev.backwards_grad += backward_fn(self.backwards_grad, local_grad)
+            prev.backwards_grad += backward_fn(self, local_grad, prev)
 
     def _get_graph(self, zero_grad=False):
         """
@@ -78,7 +80,7 @@ class Tensor:
     def backward(self, zero_grad=True):
         ordered_tensors = self._get_graph(zero_grad=zero_grad)
 
-        self.backwards_grad = np.array(1)
+        self.backwards_grad = np.ones_like(self.value)
 
         for tensor in reversed(ordered_tensors):
             tensor._backward_step()
@@ -223,7 +225,6 @@ class Tensor:
             prevs=[
                 Edge(
                     prev=self,
-                    local_grad=np.ones_like(self.value.T),
                     backward_fn=_transpose,
                 )
             ],
@@ -233,33 +234,34 @@ class Tensor:
     def shape(self):
         return self.value.shape
 
+    @property
+    def ndim(self):
+        return self.value.ndim
+
     def reshape(self, *args):
         return Tensor(
             value=self.value.reshape(*args),
             prevs=[
                 Edge(
                     prev=self,
-                    local_grad=np.ones_like(self.value),
-                    backward_fn=_reshape_and_multiply,
+                    backward_fn=_reshape,
                 )
             ],
         )
 
-    def sum(self, axis=None):
-        summed = self.value.sum(axis=axis)
-
+    def sum(self, axis=None, keepdims=False):
         return Tensor(
-            value=summed,
+            value=self.value.sum(axis=axis, keepdims=keepdims),
             prevs=[
                 Edge(
                     prev=self,
-                    local_grad=np.ones_like(self.value),
-                    backward_fn=_broadcast_and_multiply,
+                    local_grad=1,
+                    backward_fn=_weighted_tile,
                 )
             ],
         )
 
-    def mean(self, axis=None):
+    def mean(self, axis=None, keepdims=False):
         N = (
             np.prod(self.shape)
             if axis is None
@@ -267,12 +269,12 @@ class Tensor:
         )
 
         return Tensor(
-            value=np.mean(self.value, axis=axis),
+            value=np.mean(self.value, axis=axis, keepdims=keepdims),
             prevs=[
                 Edge(
                     prev=self,
-                    local_grad=np.ones_like(self.value) / N,
-                    backward_fn=_broadcast_and_multiply,
+                    local_grad=1 / N,
+                    backward_fn=_weighted_tile,
                 )
             ],
         )
@@ -283,8 +285,7 @@ class Tensor:
             prevs=[
                 Edge(
                     prev=self,
-                    local_grad=np.ones_like(self.value),
-                    backward_fn=_sum_and_multiply,
+                    backward_fn=_reduce,
                 )
             ],
         )
