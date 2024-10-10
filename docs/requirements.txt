@@ -3,5 +3,6 @@ jupyter-book
 matplotlib
 graphviz
 seaborn
+sphinx
 numpy
 mlfz
