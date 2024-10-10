@@ -8,7 +8,9 @@ logo: logo.png
 # Force re-execution of notebooks on each build.
 # See https://jupyterbook.org/content/execute.html
 execute:
-  execute_notebooks: force
+  execute_notebooks: cache
+  timeout: -1
+  allow_errors: true
 
 # Define the name of the latex output file for PDF builds
 latex:
@@ -24,6 +26,10 @@ repository:
   url: https://github.com/cosmic-cortex/mlfz  # Online location of your book
   path_to_book: docs  # Optional path to your book, relative to the repository root
   branch: master  # Which branch of the repository should be used when creating links (optional)
+
+launch_buttons:
+  binderhub_url: "https://mybinder.org"
+  thebe: true
 
 # Add GitHub buttons to your book
 # See https://jupyterbook.org/customize/config.html#add-a-link-to-your-repository

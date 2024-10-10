@@ -7,26 +7,26 @@ root: mlfz.ipynb
 parts:
 - caption: Computational graphs
   chapters:
-  - file: 02-computational-graphs/scalar
-  - file: 02-computational-graphs/model
-  - file: 02-computational-graphs/mlp
+  - file: 02-computational-graphs/01-scalar
+  - file: 02-computational-graphs/02-model
+  - file: 02-computational-graphs/03-mlp
 
 - caption: How `Scalar` works
   chapters:
-  - file: 02-computational-graphs/forward-pass
-  - file: 02-computational-graphs/backward-pass-theory
-  - file: 02-computational-graphs/backward-pass-practice
-  - file: 02-computational-graphs/gradient-descent
+  - file: 02-computational-graphs/04-forward-pass
+  - file: 02-computational-graphs/05-backward-pass-theory
+  - file: 02-computational-graphs/06-backward-pass-practice
+  - file: 02-computational-graphs/07-gradient-descent
 
 - caption: Tensors
   chapters:
-  - file: 03-tensors/tensor
-  - file: 03-tensors/mlp
+  - file: 03-tensors/01-tensor
+  - file: 03-tensors/02-mlp
 
 - caption: How `Tensor` works
   chapters:
-  - file: 03-tensors/vectorizing-backpropagation-theory
-  - file: 03-tensors/vectorizing-backpropagation-practice
+  - file: 03-tensors/03-vectorizing-backpropagation-theory
+  - file: 03-tensors/04-vectorizing-backpropagation-practice
 
 - caption: Machine learning
   chapters:
