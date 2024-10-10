@@ -20,6 +20,5 @@ python:
      extra_requirements:
       - sphinx
 
-formats:
-  - pdf
-  - epub
+sphinx:
+  builder: html
