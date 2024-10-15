@@ -10,12 +10,12 @@ If you find value in this project, support me by grabbing a copy of my [Mathemat
 You can install the package directly from pip:
 
 ```
-pip install mlfz
+!pip install mlfz
 ```
 
 However, I encourage you to clone the repository and install via
 ```
-pip install -e .
+!pip install -e .
 ```
 from the directory. This way, any local change is reflected immediately, so you can play around with the code in, say, a Jupyter Notebook.
 
