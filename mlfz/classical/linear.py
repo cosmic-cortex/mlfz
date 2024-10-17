@@ -51,6 +51,8 @@ class LinearRegressorGD(Model):
 
     def fit(self, X: np.array, Y: np.array, lr: int = 0.01, n_steps: int = 1000):
         """
+        Fits the linear regressor with gradient descent.
+
         Args:
             X: numpy.ndarray of shape (n_batch, in_dim) containing
                 the input value.
@@ -69,7 +71,7 @@ class LinearRegressorGD(Model):
             self.a, self.b = self.a - lr * da, self.b - lr * db
 
 
-class LinearRegressorLS(LinearRegressorGD):
+class LinearRegressorLS(Model):
     def __init__(self, n_features: int):
         """
         Linear regression, optimized by solving the normal equations.
@@ -77,7 +79,7 @@ class LinearRegressorLS(LinearRegressorGD):
         Args:
             n_features: the number of features
         """
-        self.w = np.ones(n_features + 1)
+        self.w = np.zeros(n_features + 1)
 
     def _augment_data(self, X: np.array):
         ones_column = np.ones((X.shape[0], 1))
@@ -98,5 +100,20 @@ class LinearRegressorLS(LinearRegressorGD):
         return X_ @ self.w
 
     def fit(self, X: np.array, Y: np.array):
+        """
+        Fits the linear regressor by solving the normal equations.
+
+        Args:
+            X: numpy.ndarray of shape (n_batch, in_dim) containing
+                the input value.
+
+            Y: numpy.ndarray of shape of shape (n_batch, ) containing
+                the corresponding ground truth.
+        """
+
         X_ = self._augment_data(X)
         self.w = np.linalg.inv(X_.T @ X_) @ X_.T @ Y
+
+
+class LogisticRegression(Model):
+    pass
