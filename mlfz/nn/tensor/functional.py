@@ -1,7 +1,7 @@
 import numpy as np
 from .core import Tensor, Edge
 from .core.utils import _pointwise
-from ... import functional as f
+from ...functional import numpy as f
 
 
 def exp(x: Tensor):
@@ -36,7 +36,11 @@ def sigmoid(x: Tensor):
     return Tensor(
         value=f.sigmoid(x.value),
         prevs=[
-            Edge(prev=x, local_grad=f.sigmoid_prime(x.value), backward_fn=_pointwise)
+            Edge(
+                prev=x,
+                local_grad=f.sigmoid_prime(x.value),
+                backward_fn=_pointwise,
+            )
         ],
     )
 
