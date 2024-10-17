@@ -1,6 +1,14 @@
 import math
 from mlfz.nn.scalar import Scalar
-from mlfz.nn.scalar.functional import sin, sigmoid, _sigmoid, _sigmoid_prime
+from mlfz.nn.scalar.functional import sin, sigmoid
+
+
+def _sigmoid(x):
+    return 1 / (1 + math.exp(-x))
+
+
+def _sigmoid_prime(x):
+    return _sigmoid(x) * (1 - _sigmoid(x))
 
 
 def test_operations():
