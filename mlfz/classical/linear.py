@@ -2,7 +2,7 @@ import numpy as np
 from .base import Model
 
 
-class MultivariateLinearRegressorGD(Model):
+class LinearRegressorGD(Model):
     def __init__(self, n_features: int):
         """
         Linear regression, optimized with gradient descent.
@@ -69,5 +69,34 @@ class MultivariateLinearRegressorGD(Model):
             self.a, self.b = self.a - lr * da, self.b - lr * db
 
 
-class MultivariateLinearRegressorLS(Model):
-    pass
+class LinearRegressorLS(LinearRegressorGD):
+    def __init__(self, n_features: int):
+        """
+        Linear regression, optimized by solving the normal equations.
+
+        Args:
+            n_features: the number of features
+        """
+        self.w = np.ones(n_features + 1)
+
+    def _augment_data(self, X: np.array):
+        ones_column = np.ones((X.shape[0], 1))
+        return np.hstack((X, ones_column))
+
+    def predict(self, X: np.array):
+        """
+        Args:
+            X: numpy.ndarray of shape (n_batch, n_features) containing
+                the input value.
+
+        Returns:
+            Y: numpy.ndarray of shape of shape (n_batch, ) containing
+                the model predictions.
+        """
+
+        X_ = self._augment_data(X)
+        return X_ @ self.w
+
+    def fit(self, X: np.array, Y: np.array):
+        X_ = self._augment_data(X)
+        self.w = np.linalg.inv(X_.T @ X_) @ X_.T @ Y

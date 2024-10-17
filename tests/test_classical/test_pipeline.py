@@ -28,7 +28,7 @@ def test_pipeline(datasets):
         n_samples, n_features = X.shape
 
         scaler = Normalize()
-        linear = MultivariateLinearRegressorGD(n_features=n_features)
+        linear = LinearRegressorGD(n_features=n_features)
         pipeline = Pipeline([scaler, linear])
 
         pipeline.fit(X, Y)
