@@ -2,8 +2,8 @@ name: Upload Python Package to PyPI on Push to Main
 
 on:
   push:
-    branches:
-      - main
+    branches: ['main']
+    paths: ['setup.py']
 
 jobs:
   pypi-publish:
