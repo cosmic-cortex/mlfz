@@ -1,24 +1,23 @@
 import pytest
 import numpy as np
 from mlfz.classical.linear import *
-
-
-def generate_linear_dataset(n_samples, n_features):
-    X = np.random.rand(n_samples, n_features)
-    a = np.random.rand(n_features)
-    b = np.random.rand()
-    Y = X @ a + b
-    return {"X": X, "Y": Y, "a": a, "b": b}
+from mlfz.datasets import *
 
 
 @pytest.fixture
-def datasets():
+def regression_ds():
     dims = [1, 2, 5]
-    return [generate_linear_dataset(1000, d) for d in dims]
+    return [generate_linear_regression_ds(1000, d) for d in dims]
 
 
-def test_linear_gd(datasets):
-    for d in datasets:
+@pytest.fixture
+def classification_ds():
+    dims = [1, 2, 5]
+    return [generate_linear_classification_ds(1000, d) for d in dims]
+
+
+def test_linear_gd(regression_ds):
+    for d in regression_ds:
         X, Y, a, b = d["X"], d["Y"], d["a"], d["b"]
         n_samples, n_features = X.shape
 
@@ -35,8 +34,8 @@ def test_linear_gd(datasets):
         linear(X)
 
 
-def test_linear_gd_v2(datasets):
-    for d in datasets:
+def test_linear_gd_v2(regression_ds):
+    for d in regression_ds:
         X, Y, a, b = d["X"], d["Y"], d["a"], d["b"]
         w = np.concatenate((a, np.array([b])))
         n_samples, n_features = X.shape
@@ -53,8 +52,8 @@ def test_linear_gd_v2(datasets):
         linear(X)
 
 
-def test_linear_ne(datasets):
-    for d in datasets:
+def test_linear_ne(regression_ds):
+    for d in regression_ds:
         X, Y, a, b = d["X"], d["Y"], d["a"], d["b"]
         n_samples, n_features = X.shape
 
@@ -69,3 +68,20 @@ def test_linear_ne(datasets):
         linear.fit_predict(X, Y)
         linear.predict(X)
         linear(X)
+
+
+def test_binary_logistic(classification_ds):
+    for d in classification_ds:
+        X, Y, a, b = d["X"], d["Y"], d["a"], d["b"]
+        n_samples, n_features = X.shape
+
+        logistic = BinaryLogistic(n_features=n_features)
+
+        # testing .fit and correctness
+        logistic.fit(X, Y)
+        assert (logistic.predict(X) == Y).all()
+
+        # testing the other methods
+        logistic.fit_predict(X, Y)
+        logistic.predict(X)
+        logistic(X)
