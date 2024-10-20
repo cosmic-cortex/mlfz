@@ -35,6 +35,24 @@ def test_linear_gd(datasets):
         linear(X)
 
 
+def test_linear_gd_v2(datasets):
+    for d in datasets:
+        X, Y, a, b = d["X"], d["Y"], d["a"], d["b"]
+        w = np.concatenate((a, np.array([b])))
+        n_samples, n_features = X.shape
+
+        linear = LinearRegressorGDV2(n_features=n_features)
+
+        # testing .fit and correctness
+        linear.fit(X, Y, lr=0.1, n_steps=10000)
+        assert np.allclose(linear.w, w, rtol=1e-3)
+
+        # testing the other methods
+        linear.fit_predict(X, Y)
+        linear.predict(X)
+        linear(X)
+
+
 def test_linear_ne(datasets):
     for d in datasets:
         X, Y, a, b = d["X"], d["Y"], d["a"], d["b"]
