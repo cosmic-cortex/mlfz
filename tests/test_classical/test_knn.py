@@ -7,12 +7,12 @@ from mlfz.datasets import *
 @pytest.fixture
 def ds_classification():
     return [
-        generate_clusters(2, 1, 100, spread=0.1),
-        generate_clusters(2, 2, 100, spread=0.1),
-        generate_clusters(2, 5, 100, spread=0.1),
-        generate_clusters(5, 1, 100, spread=0.1),
-        generate_clusters(5, 2, 100, spread=0.1),
-        generate_clusters(5, 5, 100, spread=0.1),
+        generate_clusters(2, 1, 100, spread=0.01),
+        generate_clusters(2, 2, 100, spread=0.01),
+        generate_clusters(2, 5, 100, spread=0.01),
+        generate_clusters(5, 1, 100, spread=0.01),
+        generate_clusters(5, 2, 100, spread=0.01),
+        generate_clusters(5, 5, 100, spread=0.01),
     ]
 
 

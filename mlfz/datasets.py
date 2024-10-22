@@ -5,10 +5,10 @@ from .functional.numpy import sigmoid
 def generate_clusters(n_clusters, n_features, points_per_cluster, spread=1.0):
     clusters = []
     labels = []
-    for i in range(n_features):
-        mean = np.random.rand(n_clusters) * 10
+    for i in range(n_clusters):
+        mean = np.random.rand(n_features) * 10
         cluster = np.random.normal(
-            loc=mean, scale=spread, size=(points_per_cluster, n_clusters)
+            loc=mean, scale=spread, size=(points_per_cluster, n_features)
         )
         clusters.append(cluster)
         labels.append(np.full(points_per_cluster, i))
