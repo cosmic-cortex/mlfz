@@ -19,12 +19,12 @@ def datasets():
     ]
 
 
-def test_decision_tree(datasets):
+def test_classification_tree(datasets):
     for d in datasets:
         for max_depth in [0, 1, 2, 5]:
             X, Y = d["X"], d["Y"]
 
-            tree = DecisionTree(max_depth=max_depth)
+            tree = ClassificationTree(max_depth=max_depth)
 
             tree.fit(X, Y)
             tree.fit_predict(X, Y)
