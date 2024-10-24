@@ -9,6 +9,10 @@ def most_frequent_label(Y):
     return Y_unique[np.argmax(counts)]
 
 
+def average_label(Y):
+    return np.mean(Y)
+
+
 def gini_impurity(Y):
     """
     Computes the Gini impurity of a leaf node.
@@ -26,21 +30,14 @@ def gini_impurity(Y):
     return 1 - (freq**2).sum()
 
 
+def mean_squared_error(Y):
+    m = np.mean(Y)
+    return np.mean((Y - m) ** 2)
+
+
 def weighted_score(Ys: List, score_fn: Callable):
     n_samples = sum([len(Y) for Y in Ys])
     return sum([(len(Y) / n_samples) * score_fn(Y) for Y in Ys])
-
-
-def gini_impurity_split(Ys: List):
-    """
-    Computes the Gini impurity of a split.
-
-    Args:
-        Ys: list of np.ndarrays with categorical variables representing
-            class labels.
-    """
-
-    return weighted_score(Ys, gini_impurity)
 
 
 class DecisionTree(Model):
@@ -74,6 +71,14 @@ class DecisionTree(Model):
         right_idx = ~left_idx
         return left_idx, right_idx
 
+    def _create_child(self):
+        return DecisionTree(
+            max_depth=self.max_depth - 1,
+            min_samples_split=self.min_samples_split,
+            leaf_score=self.leaf_score,
+            leaf_vote=self.leaf_vote,
+        )
+
     @property
     def is_leaf(self):
         return self.predicted_class != None
@@ -102,19 +107,8 @@ class DecisionTree(Model):
         # recursively training a
         left_idx, right_idx = self._build_idx(X)
 
-        self.left_child = DecisionTree(
-            max_depth=self.max_depth - 1,
-            min_samples_split=self.min_samples_split,
-            leaf_score=self.leaf_score,
-            leaf_vote=self.leaf_vote,
-        ).fit(X[left_idx], Y[left_idx])
-
-        self.right_child = DecisionTree(
-            max_depth=self.max_depth - 1,
-            min_samples_split=self.min_samples_split,
-            leaf_score=self.leaf_score,
-            leaf_vote=self.leaf_vote,
-        ).fit(X[right_idx], Y[right_idx])
+        self.left_child = self._create_child().fit(X[left_idx], Y[left_idx])
+        self.right_child = self._create_child().fit(X[right_idx], Y[right_idx])
 
         return self
 
@@ -122,15 +116,15 @@ class DecisionTree(Model):
         if self.is_leaf:
             return np.full(X.shape[0], self.predicted_class)
 
+        predictions = np.zeros(X.shape[0], dtype=np.int32)
         left_idx, right_idx = self._build_idx(X)
 
-        predictions = np.zeros(X.shape[0], dtype=np.int32)
-
-        try:
-            predictions[left_idx] = self.left_child.predict(X[left_idx])
-            predictions[right_idx] = self.right_child.predict(X[right_idx])
-        except:
-            pass
+        predictions[left_idx] = (
+            self.left_child.predict(X[left_idx]) if self.left_child else None
+        )
+        predictions[right_idx] = (
+            self.right_child.predict(X[right_idx]) if self.right_child else None
+        )
 
         return predictions
 
@@ -142,7 +136,7 @@ class DecisionTree(Model):
                 graph.node(str(node_id), label=label)
                 return
 
-            label = f"X[{tree.split_feature_idx}] <= {tree.threshold:.2f}"
+            label = f"X[{tree.split_feature_idx}] < {tree.threshold:.2f}"
             graph.node(str(node_id), label=label)
 
             left_child_id = node_id * 2 + 1
