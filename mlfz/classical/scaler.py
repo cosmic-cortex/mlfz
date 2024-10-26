@@ -1,5 +1,5 @@
 import numpy as np
-from mlfz.classical.base import Model
+from .base import Model
 
 
 class Normalize(Model):

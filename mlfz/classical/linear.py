@@ -1,6 +1,6 @@
 import numpy as np
 from .base import Model
-from mlfz.functional.numpy import sigmoid
+from ..functional.numpy import sigmoid
 
 
 def _augment_data(X: np.array):
