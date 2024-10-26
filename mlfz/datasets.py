@@ -1,5 +1,5 @@
 import numpy as np
-from mlfz.functional.numpy import sigmoid
+from .functional.numpy import sigmoid
 
 
 def generate_clusters(n_clusters, n_features, points_per_cluster, spread=1.0):

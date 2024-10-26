@@ -1,6 +1,6 @@
 import numpy as np
 from typing import Iterable
-from mlfz.classical.base import Model
+from .base import Model
 
 
 class Pipeline(Model):
