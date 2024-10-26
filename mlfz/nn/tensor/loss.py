@@ -1,5 +1,5 @@
-from .core import Tensor
-from .functional import log
+from mlfz.nn.tensor import Tensor
+from mlfz.nn.tensor.functional import log
 
 
 def mean_squared_error(preds: Tensor, ys: Tensor) -> Tensor:

@@ -1,6 +1,6 @@
 import math
-from .core import Scalar
-from .functional import log
+from mlfz.nn.scalar.core import Scalar
+from mlfz.nn.scalar.functional import log
 from typing import List
 
 
