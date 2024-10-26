@@ -1,6 +1,6 @@
 import numpy as np
 from scipy.spatial.distance import cdist
-from .base import Model
+from mlfz.classical.base import Model
 
 
 class KNNClassifier(Model):

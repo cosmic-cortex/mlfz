@@ -1,7 +1,7 @@
 import numpy as np
 from graphviz import Digraph
 from typing import List, Callable
-from ..base import Model
+from mlfz.classical.base import Model
 
 
 def most_frequent_label(Y):

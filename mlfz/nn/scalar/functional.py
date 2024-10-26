@@ -1,6 +1,6 @@
 import math
-from .core import Scalar, Edge
-from ...functional import vanilla as f
+from mlfz.nn.scalar.core import Scalar, Edge
+from mlfz.functional import vanilla as f
 
 
 def sin(x: Scalar):

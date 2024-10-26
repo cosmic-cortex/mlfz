@@ -1,7 +1,7 @@
 import numpy as np
-from .core import Tensor, Edge
-from .core.utils import _pointwise
-from ...functional import numpy as f
+from mlfz.nn.tensor.core import Tensor, Edge
+from mlfz.nn.tensor.core.utils import _pointwise
+from mlfz.functional import numpy as f
 
 
 def exp(x: Tensor):
