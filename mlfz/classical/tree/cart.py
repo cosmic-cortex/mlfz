@@ -59,6 +59,9 @@ class DecisionTree(Model):
         self.right_child = None
         self.predicted_class = None
 
+    def __repr__(self):
+        return f"DecisionTree(max_depth={self.max_depth}, min_samples_split={self.min_samples_split})"
+
     def _should_stop(self, Y: np.ndarray):
         return (
             (len(np.unique(Y)) == 1)
