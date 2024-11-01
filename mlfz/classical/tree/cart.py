@@ -13,7 +13,27 @@ def average_label(Y):
     return np.mean(Y)
 
 
-def gini_impurity(Y):
+def gini_impurity(p):
+    """
+    Computes the Gini impurity of the probability distribution p.
+
+    Args:
+        p: np.ndarray of categorical variables with shape (n_samples, ),
+            representing class labels.
+
+    Returns:
+        gi: float, the Gini impurity of the label vector.
+    """
+    return 1 - (p**2).sum()
+
+
+def leaf_score(Y, score_fn):
+    _, counts = np.unique(Y, return_counts=True)
+    p = counts / len(Y)
+    return score_fn(p)
+
+
+def gini_impurity_leaf(Y):
     """
     Computes the Gini impurity of a leaf node.
 
@@ -25,9 +45,7 @@ def gini_impurity(Y):
         gi: float, the Gini impurity of the label vector.
     """
 
-    _, counts = np.unique(Y, return_counts=True)
-    freq = counts / len(Y)
-    return 1 - (freq**2).sum()
+    return leaf_score(Y, gini_impurity)
 
 
 def mean_squared_error(Y):
@@ -43,8 +61,8 @@ def weighted_score(Ys: List, score_fn: Callable):
 class DecisionTree(Model):
     def __init__(
         self,
-        leaf_vote=gini_impurity,
-        leaf_score=most_frequent_label,
+        leaf_vote=most_frequent_label,
+        leaf_score=gini_impurity_leaf,
         max_depth=None,
         min_samples_split=2,
     ):
@@ -100,7 +118,7 @@ class DecisionTree(Model):
             left_idx = X[:, feature_idx] < c
             right_idx = ~left_idx
             split = [Y[left_idx], Y[right_idx]]
-            scores[i, feature_idx] = weighted_score(split, gini_impurity)
+            scores[i, feature_idx] = weighted_score(split, gini_impurity_leaf)
 
         row_idx, self.split_feature_idx = np.unravel_index(
             np.argmin(scores), scores.shape
@@ -162,6 +180,6 @@ def ClassificationTree(max_depth=None, min_samples_split=2):
     return DecisionTree(
         max_depth=max_depth,
         min_samples_split=min_samples_split,
-        leaf_score=gini_impurity,
+        leaf_score=gini_impurity_leaf,
         leaf_vote=most_frequent_label,
     )
