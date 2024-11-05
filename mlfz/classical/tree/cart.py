@@ -1,16 +1,17 @@
 import numpy as np
+from scipy.stats import entropy
 from graphviz import Digraph
 from typing import List, Callable
 from ..base import Model
 
 
+def average_label(Y):
+    return np.mean(Y)
+
+
 def most_frequent_label(Y):
     Y_unique, counts = np.unique(Y, return_counts=True)
     return Y_unique[np.argmax(counts)]
-
-
-def average_label(Y):
-    return np.mean(Y)
 
 
 def gini_impurity(p):
@@ -33,7 +34,7 @@ def leaf_score(Y, score_fn):
     return score_fn(p)
 
 
-def gini_impurity_leaf(Y):
+def leaf_gini_impurity(Y):
     """
     Computes the Gini impurity of a leaf node.
 
@@ -46,6 +47,10 @@ def gini_impurity_leaf(Y):
     """
 
     return leaf_score(Y, gini_impurity)
+
+
+def leaf_entropy(Y):
+    return leaf_score(Y, entropy)
 
 
 def mean_squared_error(Y):
@@ -62,7 +67,7 @@ class DecisionTree(Model):
     def __init__(
         self,
         leaf_vote=most_frequent_label,
-        leaf_score=gini_impurity_leaf,
+        leaf_score=leaf_gini_impurity,
         max_depth=None,
         min_samples_split=2,
     ):
@@ -78,7 +83,7 @@ class DecisionTree(Model):
         self.predicted_class = None
 
     def __repr__(self):
-        return f"DecisionTree(max_depth={self.max_depth}, min_samples_split={self.min_samples_split})"
+        return f"{self.__class__.__name__}(max_depth={self.max_depth}, min_samples_split={self.min_samples_split})"
 
     def _should_stop(self, Y: np.ndarray):
         return (
@@ -87,18 +92,22 @@ class DecisionTree(Model):
             or (self.max_depth == 0)
         )
 
-    def _build_idx(self, X: np.ndarray):
+    def _split_idx(self, X: np.ndarray):
         left_idx = X[:, self.split_feature_idx] < self.threshold
         right_idx = ~left_idx
         return left_idx, right_idx
 
     def _create_child(self):
-        return DecisionTree(
+        return self.__class__(
             max_depth=self.max_depth - 1,
             min_samples_split=self.min_samples_split,
             leaf_score=self.leaf_score,
             leaf_vote=self.leaf_vote,
         )
+
+    def split(self, X: np.ndarray):
+        left_idx, right_idx = self._split_idx(X)
+        return X[left_idx], X[right_idx]
 
     @property
     def is_leaf(self):
@@ -118,15 +127,15 @@ class DecisionTree(Model):
             left_idx = X[:, feature_idx] < c
             right_idx = ~left_idx
             split = [Y[left_idx], Y[right_idx]]
-            scores[i, feature_idx] = weighted_score(split, gini_impurity_leaf)
+            scores[i, feature_idx] = weighted_score(split, leaf_gini_impurity)
 
         row_idx, self.split_feature_idx = np.unravel_index(
             np.argmin(scores), scores.shape
         )
         self.threshold = thresholds[row_idx, self.split_feature_idx]
 
-        # recursively training a
-        left_idx, right_idx = self._build_idx(X)
+        # recursively training a decision tree
+        left_idx, right_idx = self._split_idx(X)
 
         self.left_child = self._create_child().fit(X[left_idx], Y[left_idx])
         self.right_child = self._create_child().fit(X[right_idx], Y[right_idx])
@@ -138,7 +147,7 @@ class DecisionTree(Model):
             return np.full(X.shape[0], self.predicted_class)
 
         predictions = np.zeros(X.shape[0], dtype=np.int32)
-        left_idx, right_idx = self._build_idx(X)
+        left_idx, right_idx = self._split_idx(X)
 
         predictions[left_idx] = (
             self.left_child.predict(X[left_idx]) if self.left_child else None
@@ -176,10 +185,15 @@ class DecisionTree(Model):
         return graph
 
 
-def ClassificationTree(max_depth=None, min_samples_split=2):
-    return DecisionTree(
-        max_depth=max_depth,
-        min_samples_split=min_samples_split,
-        leaf_score=gini_impurity_leaf,
-        leaf_vote=most_frequent_label,
-    )
+class ClassificationTree(DecisionTree):
+    def __init__(self, max_depth=None, min_samples_split=2, **kwargs):
+        super().__init__(
+            most_frequent_label, leaf_gini_impurity, max_depth, min_samples_split
+        )
+
+
+class RegressionTree(DecisionTree):
+    def __init__(self, max_depth=None, min_samples_split=2, **kwargs):
+        super().__init__(
+            average_label, mean_squared_error, max_depth, min_samples_split
+        )
