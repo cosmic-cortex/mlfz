@@ -119,7 +119,6 @@ class DecisionTree(Model):
             return self
 
         X_sorted = np.sort(X, axis=0)
-
         thresholds = (X_sorted[1:] + X_sorted[:-1]) / 2
         scores = np.zeros_like(thresholds)
 
@@ -127,7 +126,7 @@ class DecisionTree(Model):
             left_idx = X[:, feature_idx] < c
             right_idx = ~left_idx
             split = [Y[left_idx], Y[right_idx]]
-            scores[i, feature_idx] = weighted_score(split, leaf_gini_impurity)
+            scores[i, feature_idx] = weighted_score(split, self.leaf_score)
 
         row_idx, self.split_feature_idx = np.unravel_index(
             np.argmin(scores), scores.shape
@@ -188,12 +187,18 @@ class DecisionTree(Model):
 class ClassificationTree(DecisionTree):
     def __init__(self, max_depth=None, min_samples_split=2, **kwargs):
         super().__init__(
-            most_frequent_label, leaf_gini_impurity, max_depth, min_samples_split
+            max_depth=max_depth,
+            min_samples_split=min_samples_split,
+            leaf_vote=most_frequent_label,
+            leaf_score=leaf_gini_impurity,
         )
 
 
 class RegressionTree(DecisionTree):
     def __init__(self, max_depth=None, min_samples_split=2, **kwargs):
         super().__init__(
-            average_label, mean_squared_error, max_depth, min_samples_split
+            max_depth=max_depth,
+            min_samples_split=min_samples_split,
+            leaf_vote=average_label,
+            leaf_score=mean_squared_error,
         )
