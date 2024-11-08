@@ -161,7 +161,11 @@ class DecisionTree(Model):
     def digraph(self):
         def build_graph(tree, graph, node_id):
             if tree.is_leaf:
-                label = f"{tree.predicted_class}"
+                label = (
+                    f"{tree.predicted_class:.2f}"
+                    if isinstance(tree.predicted_class, float)
+                    else f"{tree.predicted_class}"
+                )
                 graph.node(str(node_id), label=label)
                 return
 
@@ -195,10 +199,19 @@ class ClassificationTree(DecisionTree):
 
 
 class RegressionTree(DecisionTree):
-    def __init__(self, max_depth=None, min_samples_split=2, **kwargs):
+    def __init__(self, max_depth=None, min_samples_split=2, min_score=1, **kwargs):
         super().__init__(
             max_depth=max_depth,
             min_samples_split=min_samples_split,
             leaf_vote=average_label,
             leaf_score=mean_squared_error,
+        )
+        self.min_score = min_score
+
+    def _should_stop(self, Y: np.ndarray):
+        return (
+            (len(np.unique(Y)) == 1)
+            or (self.leaf_score(Y) < self.min_score)
+            or (len(Y) < self.min_samples_split)
+            or (self.max_depth == 0)
         )
