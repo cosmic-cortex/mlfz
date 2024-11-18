@@ -13,7 +13,7 @@ class KNNClassifier(Model):
         self.Y_training = Y
 
     def predict(self, X):
-        dmap = cdist(self.X_training, X)
+        dmap = cdist(self.X_training, X, metric=self.metric)
         nearest_idx = np.argsort(dmap, axis=0)[: self.k, :]
         nearest_lbl = self.Y_training[nearest_idx]
         pred = np.array([np.bincount(labels).argmax() for labels in nearest_lbl.T])
@@ -30,7 +30,7 @@ class KNNRegressor(Model):
         self.Y_training = Y
 
     def predict(self, X):
-        dmap = cdist(self.X_training, X)
+        dmap = cdist(self.X_training, X, metric=self.metric)
         nearest_idx = np.argsort(dmap, axis=0)[: self.k, :]
         nearest_lbl = self.Y_training[nearest_idx]
         pred = nearest_lbl.mean(axis=0)
