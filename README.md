@@ -27,3 +27,5 @@ Contributions are welcome! If you think you could make this project better, feel
 2. Fork the repository and create a feature branch where you'll prepare the proposed changes.
 3. Open a PR to the `main` branch and tag me ([@cosmic-cortex](https://github.com/cosmic-cortex/)) as a reviewer.
 4. I'll either leave comments and suggestions, or merge the PR.
+
+PS: I wasn't hacked.
