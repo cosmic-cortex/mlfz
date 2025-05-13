@@ -1,7 +1,12 @@
 import numpy as np
+from scipy.stats import entropy
 from graphviz import Digraph
 from typing import List, Callable
 from ..base import Model
+
+
+def average_label(Y):
+    return np.mean(Y)
 
 
 def most_frequent_label(Y):
@@ -9,11 +14,27 @@ def most_frequent_label(Y):
     return Y_unique[np.argmax(counts)]
 
 
-def average_label(Y):
-    return np.mean(Y)
+def gini_impurity(p):
+    """
+    Computes the Gini impurity of the probability distribution p.
+
+    Args:
+        p: np.ndarray of categorical variables with shape (n_samples, ),
+            representing class labels.
+
+    Returns:
+        gi: float, the Gini impurity of the label vector.
+    """
+    return 1 - (p**2).sum()
 
 
-def gini_impurity(Y):
+def leaf_score(Y, score_fn):
+    _, counts = np.unique(Y, return_counts=True)
+    p = counts / len(Y)
+    return score_fn(p)
+
+
+def leaf_gini_impurity(Y):
     """
     Computes the Gini impurity of a leaf node.
 
@@ -25,9 +46,11 @@ def gini_impurity(Y):
         gi: float, the Gini impurity of the label vector.
     """
 
-    _, counts = np.unique(Y, return_counts=True)
-    freq = counts / len(Y)
-    return 1 - (freq**2).sum()
+    return leaf_score(Y, gini_impurity)
+
+
+def leaf_entropy(Y):
+    return leaf_score(Y, entropy)
 
 
 def mean_squared_error(Y):
@@ -43,8 +66,8 @@ def weighted_score(Ys: List, score_fn: Callable):
 class DecisionTree(Model):
     def __init__(
         self,
-        leaf_vote=gini_impurity,
-        leaf_score=most_frequent_label,
+        leaf_vote=most_frequent_label,
+        leaf_score=leaf_gini_impurity,
         max_depth=None,
         min_samples_split=2,
     ):
@@ -59,6 +82,9 @@ class DecisionTree(Model):
         self.right_child = None
         self.predicted_class = None
 
+    def __repr__(self):
+        return f"{self.__class__.__name__}(max_depth={self.max_depth}, min_samples_split={self.min_samples_split})"
+
     def _should_stop(self, Y: np.ndarray):
         return (
             (len(np.unique(Y)) == 1)
@@ -66,18 +92,22 @@ class DecisionTree(Model):
             or (self.max_depth == 0)
         )
 
-    def _build_idx(self, X: np.ndarray):
+    def _split_idx(self, X: np.ndarray):
         left_idx = X[:, self.split_feature_idx] < self.threshold
         right_idx = ~left_idx
         return left_idx, right_idx
 
     def _create_child(self):
-        return DecisionTree(
+        return self.__class__(
             max_depth=self.max_depth - 1,
             min_samples_split=self.min_samples_split,
             leaf_score=self.leaf_score,
             leaf_vote=self.leaf_vote,
         )
+
+    def split(self, X: np.ndarray):
+        left_idx, right_idx = self._split_idx(X)
+        return X[left_idx], X[right_idx]
 
     @property
     def is_leaf(self):
@@ -89,7 +119,6 @@ class DecisionTree(Model):
             return self
 
         X_sorted = np.sort(X, axis=0)
-
         thresholds = (X_sorted[1:] + X_sorted[:-1]) / 2
         scores = np.zeros_like(thresholds)
 
@@ -97,15 +126,15 @@ class DecisionTree(Model):
             left_idx = X[:, feature_idx] < c
             right_idx = ~left_idx
             split = [Y[left_idx], Y[right_idx]]
-            scores[i, feature_idx] = weighted_score(split, gini_impurity)
+            scores[i, feature_idx] = weighted_score(split, self.leaf_score)
 
         row_idx, self.split_feature_idx = np.unravel_index(
             np.argmin(scores), scores.shape
         )
         self.threshold = thresholds[row_idx, self.split_feature_idx]
 
-        # recursively training a
-        left_idx, right_idx = self._build_idx(X)
+        # recursively training a decision tree
+        left_idx, right_idx = self._split_idx(X)
 
         self.left_child = self._create_child().fit(X[left_idx], Y[left_idx])
         self.right_child = self._create_child().fit(X[right_idx], Y[right_idx])
@@ -117,7 +146,7 @@ class DecisionTree(Model):
             return np.full(X.shape[0], self.predicted_class)
 
         predictions = np.zeros(X.shape[0], dtype=np.int32)
-        left_idx, right_idx = self._build_idx(X)
+        left_idx, right_idx = self._split_idx(X)
 
         predictions[left_idx] = (
             self.left_child.predict(X[left_idx]) if self.left_child else None
@@ -132,7 +161,11 @@ class DecisionTree(Model):
     def digraph(self):
         def build_graph(tree, graph, node_id):
             if tree.is_leaf:
-                label = f"{tree.predicted_class}"
+                label = (
+                    f"{tree.predicted_class:.2f}"
+                    if isinstance(tree.predicted_class, float)
+                    else f"{tree.predicted_class}"
+                )
                 graph.node(str(node_id), label=label)
                 return
 
@@ -155,10 +188,30 @@ class DecisionTree(Model):
         return graph
 
 
-def ClassificationTree(max_depth=None, min_samples_split=2):
-    return DecisionTree(
-        max_depth=max_depth,
-        min_samples_split=min_samples_split,
-        leaf_score=gini_impurity,
-        leaf_vote=most_frequent_label,
-    )
+class ClassificationTree(DecisionTree):
+    def __init__(self, max_depth=None, min_samples_split=2, **kwargs):
+        super().__init__(
+            max_depth=max_depth,
+            min_samples_split=min_samples_split,
+            leaf_vote=most_frequent_label,
+            leaf_score=leaf_gini_impurity,
+        )
+
+
+class RegressionTree(DecisionTree):
+    def __init__(self, max_depth=None, min_samples_split=2, min_score=1, **kwargs):
+        super().__init__(
+            max_depth=max_depth,
+            min_samples_split=min_samples_split,
+            leaf_vote=average_label,
+            leaf_score=mean_squared_error,
+        )
+        self.min_score = min_score
+
+    def _should_stop(self, Y: np.ndarray):
+        return (
+            (len(np.unique(Y)) == 1)
+            or (self.leaf_score(Y) < self.min_score)
+            or (len(Y) < self.min_samples_split)
+            or (self.max_depth == 0)
+        )
