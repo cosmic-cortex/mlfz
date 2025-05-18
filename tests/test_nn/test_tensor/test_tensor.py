@@ -1,6 +1,21 @@
 import numpy as np
 from mlfz.nn.tensor import Tensor, sum, mean
-from itertools import product
+from itertools import product, combinations
+from functools import partial
+
+
+def _finite_diff(f, x, h=1e-8):
+    x = np.asarray(x, dtype=float)
+    grad = np.zeros_like(x)
+
+    for idx in np.ndindex(x.shape):
+        x_forward = x.copy()
+        x_backward = x.copy()
+        x_forward[idx] += h
+        x_backward[idx] -= h
+        grad[idx] = (f(x_forward) - f(x_backward)) / (2 * h)
+
+    return grad.reshape(x.shape)
 
 
 def test_init():
@@ -59,6 +74,39 @@ def test_binary_ops():
         assert (z.value == z_np).all()
 
 
+def test_binary_ops_backwards():
+    x = 2 * Tensor.ones(3, 2)
+    ys = [
+        Tensor(2),
+        2 * Tensor.ones(3, 2),
+        2 * Tensor.ones(3, 1),
+        2 * Tensor.ones(1, 2),
+    ]
+
+    fs = [
+        lambda x, y: (x + y).sum(),
+        lambda x, y: (y + x).sum(),
+        lambda x, y: (x * y).sum(),
+        lambda x, y: (y * x).sum(),
+        lambda x, y: (x**y).sum(),
+        lambda x, y: (x / y).sum(),
+    ]
+
+    for f, y in product(fs, ys):
+        z = f(x, y)
+        z.backward()
+        assert np.allclose(
+            x.backwards_grad,
+            _finite_diff(partial(f, y=y.value), x.value),
+            1e-4,
+        )
+        assert np.allclose(
+            y.backwards_grad,
+            _finite_diff(partial(f, x.value), y.value),
+            1e-4,
+        )
+
+
 def test_sum():
     x = Tensor(np.array([[[1, 2], [3, 4], [5, 6]], [[7, 8], [9, 10], [11, 12]]]))
     axs = [None, 0, 1, 2, (0, 1), (0, 2), (1, 2), (0, 1, 2)]
@@ -68,6 +116,18 @@ def test_sum():
         x_sum_method = x.sum(axis=axis)
         assert (x_sum.value == np.sum(x.value, axis=axis)).all()
         assert (x_sum.value == x_sum_method.value).all()
+
+
+def test_sum_backwards():
+    x = Tensor.from_random(3, 3, 3, 3, 3)
+    axs = [subset for r in range(5) for subset in combinations(range(4), r)]
+
+    for axis, keepdims in product(axs, [True, False]):
+        f = lambda x: x.sum(axis=axis, keepdims=keepdims).sum()
+        y = f(x)
+        y.backward()
+        print(x.backwards_grad - _finite_diff(f, x.value))
+        assert np.allclose(x.backwards_grad, _finite_diff(f, x.value), atol=1e-4)
 
 
 def test_mean():
@@ -81,12 +141,49 @@ def test_mean():
         assert (x_mean.value == x_mean_method.value).all()
 
 
+def test_mean_backwards():
+    x = Tensor(
+        np.array(
+            [
+                [[1.0, 2.0], [3.0, 4.0], [5.0, 6.0]],
+                [[7.0, 8.0], [9.0, 10.0], [11.0, 12.0]],
+            ]
+        )
+    )
+    axs = [None, 0, 1, 2, (0, 1), (0, 2), (1, 2), (0, 1, 2)]
+
+    for axis, keepdims in product(axs, [True, False]):
+        f = lambda x: x.mean(axis=axis, keepdims=keepdims).sum()
+        y = f(x)
+        y.backward()
+        assert np.allclose(x.backwards_grad, _finite_diff(f, x.value))
+
+
 def test_reshape():
     x = Tensor(np.array([[1, 2], [3, 4], [5, 6]]))
 
     assert (x.reshape(2, 3).value == x.value.reshape(2, 3)).all()
     assert (x.reshape(1, -1).value == x.value.reshape(1, -1)).all()
     assert (x.reshape(-1).value == x.value.reshape(-1)).all()
+
+
+def test_reshape_backwards():
+    x = Tensor(
+        np.array([[1.0, 2.0, 3.0, 4.0], [5.0, 6.0, 7.0, 8.0], [9.0, 10.0, 11.0, 12.0]])
+    )
+
+    fs = [
+        lambda x: x.reshape(1, -1).sum(),
+        lambda x: x.reshape(-1).sum(),
+        lambda x: x.reshape(2, 6).sum(),
+        lambda x: x.reshape(6, 2).sum(),
+        lambda x: x.reshape(4, 3).sum(),
+    ]
+
+    for f in fs:
+        y = f(x)
+        y.backward()
+        assert np.allclose(y.backwards_grad, _finite_diff(f, x.value))
 
 
 def test_broadcast_to():
@@ -99,3 +196,108 @@ def test_broadcast_to():
     shapes = [(1, 1, 1), (3, 1), (1, 3), (1, 2, 1), (3, 5, 6)]
     for s in shapes:
         assert x.broadcast_to(s).shape == s
+
+
+def test_broadcast_to_backwards():
+    x = Tensor.ones(3, 1)
+    shapes = [(3, 2), (3, 5), (3, 9)]
+
+    for s in shapes:
+        f = lambda x: x.broadcast_to(s).sum()
+        f_np = lambda x: np.broadcast_to(x, s).sum()
+
+        y = f(x)
+        y.backward()
+
+        assert x.backwards_grad.shape == x.shape
+        assert np.allclose(x.backwards_grad, _finite_diff(f_np, x.value))
+
+    x = Tensor.ones(1, 3)
+    shapes = [(2, 3), (5, 3), (9, 3)]
+
+    for s in shapes:
+        f = lambda x: x.broadcast_to(s).sum()
+        f_np = lambda x: np.broadcast_to(x, s).sum()
+
+        y = f(x)
+        y.backward()
+
+        assert x.backwards_grad.shape == x.shape
+        assert np.allclose(x.backwards_grad, _finite_diff(f_np, x.value))
+
+    x = Tensor.ones(3)
+    shapes = [(1, 3), (2, 3), (3, 3)]
+
+    for s in shapes:
+        f = lambda x: x.broadcast_to(s).sum()
+        f_np = lambda x: np.broadcast_to(x, s).sum()
+
+        y = f(x)
+        y.backward()
+        print(x.backwards_grad)
+        print(_finite_diff(f_np, x.value))
+        assert x.backwards_grad.shape == x.shape
+        assert np.allclose(x.backwards_grad, _finite_diff(f_np, x.value))
+
+    x = Tensor.ones(4, 5)
+    shapes = [(1, 1, 4, 5), (2, 3, 5, 4, 5)]
+
+    for s in shapes:
+        f = lambda x: x.broadcast_to(s).sum()
+        f_np = lambda x: np.broadcast_to(x, s).sum()
+
+        y = f(x)
+        y.backward()
+
+        assert x.backwards_grad.shape == x.shape
+        assert np.allclose(x.backwards_grad, _finite_diff(f_np, x.value))
+
+
+def test_matmul():
+    x = Tensor.ones(5, 4)
+    y = Tensor.ones(4, 8)
+
+    z = x @ y
+
+    assert np.allclose(z.value, x.value @ y.value)
+
+
+def test_matmul_backwards():
+    x = Tensor.ones(5, 4)
+    y = Tensor.ones(4, 8)
+
+    f = lambda x, y: (x @ y).sum()
+    z = f(x, y)
+    z.backward()
+
+    assert np.allclose(x.backwards_grad, _finite_diff(partial(f, y=y.value), x.value))
+    assert np.allclose(y.backwards_grad, _finite_diff(partial(f, x.value), y.value))
+
+
+def test_transpose():
+    x = Tensor.ones(5, 8)
+    y = x.T
+
+    assert np.allclose(y.value, x.value.T)
+
+
+def test_transpose_backwards():
+    x = Tensor.ones(5, 8)
+    f = lambda x: x.T.sum()
+    y = f(x)
+    y.backward()
+
+    assert np.allclose(y.backwards_grad, _finite_diff(f, x.value))
+
+
+def test_sub_pow_backwards():
+    # tensor case
+    x = Tensor(np.array([[1.0, 2.0], [3.0, 4.0], [5.0, 6.0]]))
+    y = Tensor(np.array([[7.0, 8.0], [9.0, 10.0], [11.0, 12.0]]))
+
+    f = lambda x, y: ((x - y) ** 3).sum()
+    z = f(x, y)
+    z.backward()
+
+    assert np.allclose(x.backwards_grad, _finite_diff(partial(f, y=y.value), x.value))
+    assert np.allclose(y.backwards_grad, _finite_diff(partial(f, x.value), y.value))

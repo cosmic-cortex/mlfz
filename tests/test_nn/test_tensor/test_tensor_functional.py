@@ -1,3 +1,4 @@
+import pytest
 import numpy as np
 from itertools import product
 from mlfz.nn.tensor import Tensor
@@ -42,6 +43,10 @@ def test_functional():
     for x, f in product(xs, fs):
         f_tensor, f_np = f
         y = f_tensor(x)
+        y_np = f_np(x.value)
+
+        assert np.allclose(y.value, y_np)
+
         y.backward()
         assert np.allclose(
             x.backwards_grad,
@@ -50,20 +55,20 @@ def test_functional():
 
 
 def test_pad():
-    xs = [Tensor.ones(5), Tensor.ones(5, 6)]  # , Tensor.ones(5, 6, 7)]
-    ws = [0, 1, 2, 3]
-    cs = [0, 1, 2, 3]
+    params = product([Tensor.ones(5), Tensor.ones(5, 6)], [0, 1, 2, 3], [0, 1, 2, 3])
+    for x, w, c in params:
+        y = pad(x, w, c)
+        y_np = np.pad(x.value, pad_width=w, constant_values=c)
+        assert np.allclose(y.value, y_np)
 
-    for x, w, c in zip(xs, ws, cs):
-        f = lambda x: pad(x, w, c)
-        f_np = lambda x: np.pad(x, pad_width=w, constant_values=c)
 
-        l = lambda x: f(x).sum()
-        l_np = lambda x: f_np(x).sum()
+def test_pad_backwards():
+    params = product([Tensor.ones(5), Tensor.ones(5, 6)], [0, 1, 2, 3], [0, 1, 2, 3])
+    for x, w, c in params:
+        f = lambda x: pad(x, w, c).sum()
+        f_np = lambda x: np.pad(x, pad_width=w, constant_values=c).sum()
 
-        assert (f(x).value == f_np(x.value)).all()
-
-        y = l(x)
+        y = f(x)
         y.backward()
 
-        assert np.allclose(x.backwards_grad, _finite_diff(l_np, x.value))
+        assert np.allclose(x.backwards_grad, _finite_diff(f_np, x.value))
