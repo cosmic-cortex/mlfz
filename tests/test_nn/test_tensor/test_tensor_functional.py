@@ -43,8 +43,27 @@ def test_functional():
         f_tensor, f_np = f
         y = f_tensor(x)
         y.backward()
-        y.backward()
         assert np.allclose(
             x.backwards_grad,
             _finite_diff(f_np, x.value),
         )
+
+
+def test_pad():
+    xs = [Tensor.ones(5), Tensor.ones(5, 6)]  # , Tensor.ones(5, 6, 7)]
+    ws = [0, 1, 2, 3]
+    cs = [0, 1, 2, 3]
+
+    for x, w, c in zip(xs, ws, cs):
+        f = lambda x: pad(x, w, c)
+        f_np = lambda x: np.pad(x, pad_width=w, constant_values=c)
+
+        l = lambda x: f(x).sum()
+        l_np = lambda x: f_np(x).sum()
+
+        assert (f(x).value == f_np(x.value)).all()
+
+        y = l(x)
+        y.backward()
+
+        assert np.allclose(x.backwards_grad, _finite_diff(l_np, x.value))

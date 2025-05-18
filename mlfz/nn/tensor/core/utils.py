@@ -125,6 +125,16 @@ def _reduce(tensor, local_grad, prev):
     ).reshape(prev.shape)
 
 
+def _unpad(tensor, local_grad, prev):
+    """
+    Unpads the backwards gradient to match the shape of the previous tensor.
+    """
+    widths = ((t - p) // 2 for t, p in zip(tensor.shape, prev.shape))
+    slices = tuple(slice(w, dim_size - w) for w, dim_size in zip(widths, tensor.shape))
+
+    return tensor.backwards_grad[slices]
+
+
 #####################
 # Utility functions #
 #####################

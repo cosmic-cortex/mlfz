@@ -10,6 +10,7 @@ from .utils import (
     _matmul_right,
     _matmul_left,
     _reshape,
+    _unpad,
     precast,
 )
 

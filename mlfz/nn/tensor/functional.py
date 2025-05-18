@@ -1,6 +1,6 @@
 import numpy as np
 from .core import Tensor, Edge
-from .core.utils import _pointwise
+from .core.utils import _pointwise, _unpad
 from ...functional import numpy as f
 
 
@@ -56,4 +56,11 @@ def tanh(x: Tensor):
     return Tensor(
         value=f.tanh(x.value),
         prevs=[Edge(prev=x, local_grad=f.tanh_prime(x.value), backward_fn=_pointwise)],
+    )
+
+
+def pad(x: Tensor, width, val):
+    return Tensor(
+        value=np.pad(x.value, pad_width=width, constant_values=val),
+        prevs=[Edge(prev=x, backward_fn=_unpad)],
     )
