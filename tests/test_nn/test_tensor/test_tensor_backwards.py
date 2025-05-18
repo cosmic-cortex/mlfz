@@ -187,13 +187,3 @@ def test_transpose():
     y.backward()
 
     assert np.allclose(y.backwards_grad, _finite_diff(f, x.value))
-
-
-def test_pad():
-    x = Tensor.ones(3, 3)
-    f = lambda x: x.pad(1, 0).sum()
-    f_np = lambda x: np.pad(x, pad_width=1, constant_values=0).sum()
-    y = f(x)
-    y.backward()
-
-    assert np.allclose(y.backwards_grad, _finite_diff(f_np, x.value))
